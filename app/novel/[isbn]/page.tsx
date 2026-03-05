@@ -19,7 +19,7 @@ async function getBook(isbn: string) {
 }
 
 export default async function BookPage(
-  { params }: { params: Promise<{ isbn: string }> }
+  { params }: { params: { isbn: string } }
 ) {
 
   const { isbn } = await params
