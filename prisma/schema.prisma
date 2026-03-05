@@ -8,52 +8,47 @@ datasource db {
 }
 
 model Book {
-  id            Int    @id @default(autoincrement())
-  isbn          String @unique
   title         String
-  titleKana     String?
   author        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   authorKana    String?
+  comment       String?
+  isbn          String    @unique
+  itemCaption   String?
+  largeImageUrl String?
   publisherName String?
   salesDate     String?
   seriesName    String?
-  itemCaption   String?
-  largeImageUrl String?
-  comment       String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  likes   Like[]
-  bookTags BookTag[]
+  titleKana     String?
+  id            Int       @id @default(autoincrement())
+  bookTags      BookTag[]
+  likes         Like[]
 }
 
 model Like {
-  id        Int    @id @default(autoincrement())
-
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  book   Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  bookId Int
-
+  id        Int      @id @default(autoincrement())
+  userId    String
+  bookId    Int
   createdAt DateTime @default(now())
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
 }
 
 model User {
   id             String              @id @default(cuid())
-  name           String?
   email          String?             @unique
+  name           String?
+  createdAt      DateTime            @default(now())
   emailVerified  DateTime?
   image          String?
   password       String?
   accounts       Account[]
-  sessions       Session[]
-  createdAt      DateTime            @default(now())
-
-  tagPreferences UserTagPreference[]
   likes          Like[]
+  sessions       Session[]
+  tagPreferences UserTagPreference[]
 }
 
 model Account {
@@ -69,8 +64,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -80,28 +74,15 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-enum TagCategory {
-  GENRE
-  PROTAGONIST
-  ABILITY
-  RELATION
-  PLOT
-  TONE
-  STYLE
-  NARRATIVE
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Tag {
-  id       String      @id @default(cuid())
-  name     String
-  key      String      @unique
-  category TagCategory
-  weight   Float       @default(1.0)
-
+  id        String              @id @default(cuid())
+  name      String
+  key       String              @unique
+  category  TagCategory
+  weight    Float               @default(1.0)
   bookTags  BookTag[]
   userPrefs UserTagPreference[]
 }
@@ -113,29 +94,34 @@ model CategoryWeight {
 }
 
 model BookTag {
-  id String @id @default(cuid())
-
-  book   Book @relation(fields: [bookId], references: [id])
-  bookId Int
-
-  tag   Tag @relation(fields: [tagId], references: [id])
-  tagId String
-
-  strength Float @default(1.0)
+  id       String @id @default(cuid())
+  tagId    String
+  strength Float  @default(1.0)
+  bookId   Int
+  book     Book   @relation(fields: [bookId], references: [id])
+  tag      Tag    @relation(fields: [tagId], references: [id])
 
   @@unique([bookId, tagId])
 }
 
 model UserTagPreference {
-  id String @id @default(cuid())
-
-  user   User @relation(fields: [userId], references: [id])
+  id     String @id @default(cuid())
   userId String
-
-  tag   Tag @relation(fields: [tagId], references: [id])
-  tagId String
-
-  score Int
+  tagId  String
+  score  Int
+  tag    Tag    @relation(fields: [tagId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   @@unique([userId, tagId])
+}
+
+enum TagCategory {
+  GENRE
+  PROTAGONIST
+  ABILITY
+  RELATION
+  PLOT
+  TONE
+  STYLE
+  NARRATIVE
 }
