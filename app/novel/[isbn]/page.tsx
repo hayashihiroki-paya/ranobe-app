@@ -1,4 +1,7 @@
+// app\novel\[isbn]\page.tsx
 import LikeButton from "@/features/like/components/LikeButton"
+
+export const dynamic = 'force-dynamic';
 
 async function getBook(isbn: string) {
 
