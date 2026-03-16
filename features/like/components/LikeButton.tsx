@@ -1,111 +1,175 @@
-// features/like/components/LikeButton.tsx
-
 "use client"
-// ↑ このコンポーネントは Client Component
-//   ReactのuseStateやクリックイベントを使うため必須
 
-// ---------------------------------------------
-// React Hooks
-// ---------------------------------------------
+/*
+  このコンポーネントは
+  「本のお気に入り登録 / 解除」を行うボタンです。
+
+  主な役割
+
+  ① DBへLike登録APIを送る
+  ② Zustand storeを更新
+  ③ UIを即時更新（全ページ同期）
+
+  検索ページ / 詳細ページ / 本棚ページ
+  すべて同じボタンを使います。
+*/
+
 import { useState } from "react"
-
-
-// ---------------------------------------------
-// Like API 呼び出し関数
-// ---------------------------------------------
 import { likeBook, unlikeBook } from "@/lib/api/like"
-
-
-// ---------------------------------------------
-// 楽天APIから取得した本の型
-// ---------------------------------------------
+import { useLikeStore } from "@/features/like/store/useLikeStore"
 import { RakutenBook } from "@/types/book"
 
+/*
+  Props
 
-// ---------------------------------------------
-// コンポーネントのProps型
-// ---------------------------------------------
+  book : 楽天APIから取得した本情報
+*/
 type Props = {
-
-  // 楽天APIの本データ
   book: RakutenBook
-
-  // すでにお気に入り済みかどうか
-  // （サーバー側で判定して渡す）
-  initialLiked: boolean
 }
 
+export default function LikeButton({ book }: Props) {
 
-// ---------------------------------------------
-// Likeボタンコンポーネント
-// ---------------------------------------------
-export default function LikeButton({ book, initialLiked }: Props) {
+  /*
+    Zustand store から現在のお気に入り状態を取得
+  */
 
-  // -------------------------------------------------
-  // Reactの状態管理
-  // liked = 現在のお気に入り状態
-  // -------------------------------------------------
-  const [liked, setLiked] = useState(initialLiked)
+  const isLiked = useLikeStore((s) => s.isLiked)
+  const like = useLikeStore((s) => s.like)
+  const unlike = useLikeStore((s) => s.unlike)
 
-  // -------------------------------------------------
-  // ボタンクリック処理
-  // -------------------------------------------------
+  /*
+    この本がお気に入り登録されているか
+  */
+  const liked = isLiked(book.isbn)
+
+  /*
+    API通信中フラグ
+
+    連打による多重リクエスト防止
+  */
+  const [loading, setLoading] = useState(false)
+
+  /*
+    お気に入りクリック処理
+  */
   const handleClick = async () => {
+
+    /*
+      通信中なら何もしない
+      (ダブルクリック防止)
+    */
+    if (loading) return
+
+    setLoading(true)
 
     try {
 
-      // -------------------------------------------------
-      // すでにお気に入り済みの場合
-      // -------------------------------------------------
+      /*
+        =============================
+        お気に入り解除
+        =============================
+      */
       if (liked) {
 
-        // お気に入り解除API
-        await unlikeBook(book.isbn)
+        /*
+          ① UIを先に更新
+          (楽観的更新)
 
-        // React状態更新
-        // → UIが即更新される
-        setLiked(false)
+          ユーザー体験がかなり良くなる
+        */
+        unlike(book.isbn)
+
+        /*
+          ② DB更新
+        */
+        await unlikeBook(book.isbn)
 
       } else {
 
-        // -------------------------------------------------
-        // 未お気に入りの場合
-        // -------------------------------------------------
+        /*
+          =============================
+          お気に入り登録
+          =============================
+        */
 
-        // お気に入り登録API
+        /*
+          ① UI先行更新
+        */
+        like(book.isbn)
+
+        /*
+          ② DB保存
+        */
         await likeBook(book)
 
-        // React状態更新
-        setLiked(true)
       }
 
     } catch (err) {
 
-      // -------------------------------------------------
-      // APIエラー処理
-      // -------------------------------------------------
-
+      /*
+        API失敗した場合
+      */
       console.error(err)
 
-      alert("エラーが発生しました")
+      alert("お気に入り更新に失敗しました")
+
+    } finally {
+
+      /*
+        通信終了
+      */
+      setLoading(false)
+
     }
   }
 
-
-  // -------------------------------------------------
-  // UI表示
-  // -------------------------------------------------
   return (
 
-    // クリックイベント登録
-    <button onClick={handleClick}>
+    <button
 
-      {/* liked状態で表示切り替え */}
-      {liked
-        ? "❤️ お気に入り解除"
-        : "🤍 お気に入り登録"
+      /*
+        Card全体がLinkになっているため
+
+        stopPropagationしないと
+        ページ遷移が起きる
+      */
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        handleClick()
+      }}
+
+      disabled={loading}
+
+      className={`
+        text-xs
+        px-2
+        py-1
+        rounded
+        transition
+
+        /*
+          liked状態で色を変える
+        */
+        ${liked
+          ? "bg-pink-100 text-pink-600"
+          : "bg-gray-100 text-gray-600"}
+      `}
+    >
+
+      {
+        /*
+          表示テキスト切り替え
+        */
+        loading
+          ? "更新中..."
+          : liked
+            ? "❤️ お気に入り済み"
+            : "🤍 お気に入り"
       }
 
     </button>
+
   )
 }

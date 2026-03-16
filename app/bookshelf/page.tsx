@@ -1,120 +1,183 @@
 // app/bookshelf/page.tsx
 
-// Prisma（DB操作ライブラリ）
-// LikeテーブルなどDBデータを取得するために使う
+/*
+  本棚ページ
+
+  ユーザーが「お気に入り登録」した本を表示するページ
+
+  ・DBからLikeデータ取得
+  ・BookCardを使って表示
+*/
+
 import { prisma } from "@/lib/prisma"
 
-// NextAuthのセッション取得
-// ログインしているユーザー情報を取得できる
+/*
+  NextAuth
+
+  現在ログインしているユーザー情報を取得する
+*/
 import { getServerSession } from "next-auth"
 
-// NextAuth設定
+/*
+  NextAuth設定
+*/
 import { authOptions } from "../api/auth/[...nextauth]/route"
 
-// Next.jsのページ遷移用Linkコンポーネント
-import Link from "next/link"
+/*
+  BookCardコンポーネント
+
+  検索・おすすめ・本棚すべてで共通利用
+*/
+import BookCard from "@/features/book/components/BookCard"
+
+/*
+  楽天Book型
+*/
+import { RakutenBook } from "@/types/book"
+import { mapBooksToRakutenBooks } from "@/lib/mappers/bookMapper"
 
 
-// ---------------------------------------------
-// 本棚ページ
-// Server Component（デフォルト）
-// DBに直接アクセスできる
-// ---------------------------------------------
 export default async function BookshelfPage() {
 
-  // -------------------------------------------------
-  // 現在ログインしているユーザーのセッション取得
-  // -------------------------------------------------
+  /*
+    ------------------------------------------------
+    現在ログインしているユーザーのセッション取得
+    ------------------------------------------------
+  */
+
   const session = await getServerSession(authOptions)
 
-  // -------------------------------------------------
-  // ログインしていない場合
-  // -------------------------------------------------
+  /*
+    ------------------------------------------------
+    ログインしていない場合
+    ------------------------------------------------
+  */
+
   if (!session?.user?.id) {
     return <div>ログインしてください</div>
   }
 
-  // -------------------------------------------------
-  // Likeテーブルからユーザーのお気に入り取得
-  // -------------------------------------------------
+  /*
+    ------------------------------------------------
+    Likeテーブルからお気に入り取得
+    ------------------------------------------------
+  */
+
   const likes = await prisma.like.findMany({
 
-    // 自分のLikeのみ取得
+    /*
+      自分のLikeのみ取得
+    */
     where: {
       userId: session.user.id
     },
 
-    // Likeに紐づくBook情報も一緒に取得
-    // Prismaのリレーション機能
+    /*
+      Likeに紐づくBook情報も取得
+    */
     include: {
       book: true
+    },
+
+    /*
+      新しい順
+    */
+    orderBy: {
+      createdAt: "desc"
     }
+
   })
 
+
+  /*
+    ------------------------------------------------
+    DBのBookデータを
+
+    RakutenBook型に変換
+
+    理由
+    BookCardは楽天API型を使用しているため
+    ------------------------------------------------
+  */
+
+  const books: RakutenBook[] = mapBooksToRakutenBooks(
+    likes.map((l) => l.book)
+  )
+
+
   return (
-    <div>
 
-      {/* ページタイトル */}
-      <h1>📚 本棚</h1>
+    <div className="max-w-6xl mx-auto p-6">
 
-      {/* -----------------------------------------
-         お気に入りが0件のとき
-      ------------------------------------------ */}
-      {likes.length === 0 && (
-        <p>お気に入りがありません</p>
+      {/* ===============================
+          ページタイトル
+      =============================== */}
+
+      <h1 className="text-2xl font-bold mb-6">
+        📚 マイ本棚
+      </h1>
+
+
+      {/* ===============================
+          お気に入り0件
+      =============================== */}
+
+      {books.length === 0 && (
+
+        <p className="text-gray-500">
+          お気に入りがありません
+        </p>
+
       )}
 
-      {/* -----------------------------------------
-         お気に入り一覧表示
-      ------------------------------------------ */}
-      {likes.map((like) => (
 
-        <div
-          key={like.id}
+      {/* ===============================
+          本カードグリッド
 
-          // 簡易スタイル
-          style={{
-            border: "1px solid #ddd",
-            padding: 16,
-            marginBottom: 12,
-            display: "flex",
-            gap: 16
-          }}
-        >
+          検索結果と同じUI
+      =============================== */}
 
-          {/* -----------------------------------------
-             本の画像
-          ------------------------------------------ */}
-          {like.book.largeImageUrl && (
-            <img
-              src={like.book.largeImageUrl}
-              width={100}
-              alt={like.book.title}
-            />
-          )}
+      <div
+        className="
 
-          <div>
+        grid
+        grid-cols-2
+        sm:grid-cols-3
+        md:grid-cols-4
+        lg:grid-cols-5
+        xl:grid-cols-6
 
-            {/* 本タイトル */}
-            <h3>{like.book.title}</h3>
+        gap-4
+      "
+      >
 
-            {/* 作者 */}
-            <p>{like.book.author}</p>
+        {books.map((book) => (
 
-            {/* -----------------------------------------
-               詳細ページリンク
-               /novel/[isbn] ページへ
-            ------------------------------------------ */}
-            <Link href={`/novel/${like.book.isbn}`}>
-              詳細
-            </Link>
+          <BookCard
 
-          </div>
+            /*
+              key
+            */
+            key={book.isbn}
 
-        </div>
+            /*
+              本データ
+            */
+            book={book}
 
-      ))}
+            /*
+              本棚用UI
+            */
+            variant="shelf"
+
+          />
+
+        ))}
+
+      </div>
 
     </div>
+
   )
+
 }

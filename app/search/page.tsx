@@ -1,5 +1,6 @@
 // app/search/page.tsx
-import BookCard from "@/features/book/components/BookCard"
+import BookCardGrid from "@/features/book/components/BookCardGrid"
+import InfiniteBookList from "@/features/book/components/InfiniteBookList"
 import SearchBar from "@/features/search/components/SearchBar"
 
 type Props = {
@@ -11,12 +12,11 @@ type Props = {
 async function searchBooks(keyword: string) {
 
   const res = await fetch(
-    `https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=${process.env.RAKUTEN_APP_ID}&title=${keyword}`
+    `${process.env.NEXTAUTH_URL}/api/search?title=${keyword}`,
+    { cache: "no-store" }
   )
 
-  const data = await res.json()
-
-  return data.Items
+  return res.json()
 }
 
 export default async function SearchPage({ searchParams }: Props) {
@@ -31,20 +31,22 @@ export default async function SearchPage({ searchParams }: Props) {
   const books = await searchBooks(keyword)
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-6 py-6">
 
       <SearchBar />
 
-      <h1>検索結果</h1>
+      <h1 className="text-xl font-bold mb-2">
+        検索結果
+      </h1>
 
-      {books.map((item: any) => (
+      <p className="text-sm text-gray-500 mb-6">
+        「{keyword}」の検索結果：{books.length}件
+      </p>
 
-        <BookCard
-          key={item.Item.isbn}
-          book={item.Item}
-        />
-
-      ))}
+      <InfiniteBookList
+        initialBooks={books}
+        keyword={keyword}
+      />
 
     </div>
   )

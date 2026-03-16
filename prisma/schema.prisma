@@ -24,6 +24,8 @@ model Book {
   id            Int       @id @default(autoincrement())
   bookTags      BookTag[]
   likes         Like[]
+  wishes        Wish[]
+  userBookTag   UserBookTag[]
 }
 
 model Like {
@@ -38,17 +40,20 @@ model Like {
 }
 
 model User {
-  id             String              @id @default(cuid())
-  email          String?             @unique
-  name           String?
-  createdAt      DateTime            @default(now())
-  emailVerified  DateTime?
-  image          String?
-  password       String?
-  accounts       Account[]
-  likes          Like[]
-  sessions       Session[]
-  tagPreferences UserTagPreference[]
+  id                String              @id @default(cuid())
+  email             String?             @unique
+  name              String?
+  createdAt         DateTime            @default(now())
+  emailVerified     DateTime?
+  image             String?
+  password          String?
+  accounts          Account[]
+  likes             Like[]
+  sessions          Session[]
+  userTagPreference UserTagPreference[]
+  wishes            Wish[]
+  userBookTag       UserBookTag[]
+
 }
 
 model Account {
@@ -78,13 +83,14 @@ model Session {
 }
 
 model Tag {
-  id        String              @id @default(cuid())
-  name      String
-  key       String              @unique
-  category  TagCategory
-  weight    Float               @default(1.0)
-  bookTags  BookTag[]
-  userPrefs UserTagPreference[]
+  id                String              @id @default(cuid())
+  name              String
+  key               String              @unique
+  category          TagCategory
+  weight            Float               @default(1.0)
+  bookTags          BookTag[]
+  userTagPreference UserTagPreference[]
+  userBookTag       UserBookTag[]
 }
 
 model CategoryWeight {
@@ -93,6 +99,7 @@ model CategoryWeight {
   weight   Float       @default(1.0)
 }
 
+// 本の基本タグ ユーザー入力の多いタグを、その本の基本的な要素として登録し、コールドケース対応に生かす
 model BookTag {
   id       String @id @default(cuid())
   tagId    String
@@ -104,15 +111,61 @@ model BookTag {
   @@unique([bookId, tagId])
 }
 
-model UserTagPreference {
+/// ============================================
+///   Wish（読んでみたいリスト）
+///   ============================================
+///
+///   ユーザーが「あとで読みたい」と思った本を保存する
+///
+///   Likeとは別機能
+///
+///   制約
+///   --------------------------------------------
+///   同じユーザーが同じ本を
+///   二重Wishできない
+model Wish {
+  id        String   @id @default(cuid())
+  /// ユーザー
+  userId    String
+  /// 本
+  bookId    Int
+  /// 登録日時
+  createdAt DateTime @default(now())
+  book      Book     @relation(fields: [bookId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, bookId])
+}
+
+model UserTagScore {
   id     String @id @default(cuid())
   userId String
   tagId  String
   score  Int
-  tag    Tag    @relation(fields: [tagId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+
+  user User @relation(fields: [userId], references: [id])
+  tag  Tag  @relation(fields: [tagId], references: [id])
 
   @@unique([userId, tagId])
+}
+
+model UserBookTag {
+  id     String @id @default(cuid())
+
+  userId String
+  bookId Int
+  tagId  String
+  score  Float @default(1)
+
+  user User @relation(fields: [userId], references: [id])
+  book Book @relation(fields: [bookId], references: [id])
+  tag  Tag  @relation(fields: [tagId], references: [id])
+
+  @@unique([userId, bookId, tagId])
+
+  @@index([userId])
+  @@index([tagId])
+  @@index([bookId])
 }
 
 enum TagCategory {
@@ -124,4 +177,7 @@ enum TagCategory {
   TONE
   STYLE
   NARRATIVE
+  WORLD
+  SETTING
+  CHARACTER
 }

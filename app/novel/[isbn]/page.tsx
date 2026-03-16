@@ -1,17 +1,16 @@
 // app/novel/[isbn]/page.tsx
-import LikeButton from "@/features/like/components/LikeButton";
 
-// SSR を強制
-export const dynamic = 'force-dynamic';
+import BookDetailView from "@/features/book/components/BookDetailView";
 
-// ISBN から本を取得
+
+export const dynamic = "force-dynamic";
+
 async function getBook(isbn: string) {
   const res = await fetch(
     `https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=${process.env.RAKUTEN_APP_ID}&isbn=${isbn}`
   );
 
   if (!res.ok) {
-    // API がエラー返した場合
     throw new Error("書籍情報の取得に失敗しました");
   }
 
@@ -24,13 +23,13 @@ async function getBook(isbn: string) {
   return data.Items[0].Item;
 }
 
-// 動的ページコンポーネント
 export default async function BookPage({
   params,
 }: {
-  params: { isbn: string };
+  params: Promise<{ isbn: string }>;
 }) {
-  const { isbn } = params; // ← await は不要
+
+  const { isbn } = await params;
 
   const book = await getBook(isbn);
 
@@ -39,22 +38,6 @@ export default async function BookPage({
   }
 
   return (
-    <div className="book-page">
-      <h1>{book.title}</h1>
-      <p>{book.author}</p>
-
-      {book.largeImageUrl && (
-        <img
-          src={book.largeImageUrl}
-          alt={book.title}
-          width={200}
-          height={300}
-        />
-      )}
-
-      <p>{book.itemCaption}</p>
-
-      <LikeButton book={book} initialLiked={false} />
-    </div>
+    <BookDetailView book={book} />
   );
 }

@@ -21,8 +21,8 @@ export default function Header() {
             検索
           </Link>
 
-          <Link href="/bookshelf">
-            本棚
+          <Link href="/library">
+            マイライブラリ
           </Link>
 
           {!session ? (

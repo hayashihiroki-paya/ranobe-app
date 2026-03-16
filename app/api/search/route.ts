@@ -1,3 +1,4 @@
+// app/api/search/route.ts
 import { NextResponse } from "next/server"
 import { BookDisplay } from "@/types/book"
 import { RakutenBookResponse } from "@/types/rakuten"
@@ -8,6 +9,7 @@ export async function GET(req: Request) {
 
   const title = searchParams.get("title")
   const booksGenreId = searchParams.get("booksGenreId")
+  const page = searchParams.get("page") ?? "1"
 
   if (!title) {
     return NextResponse.json(
@@ -22,6 +24,7 @@ export async function GET(req: Request) {
 
   url.searchParams.set("applicationId", process.env.RAKUTEN_APP_ID!)
   url.searchParams.set("title", title)
+  url.searchParams.set("page", page)
 
   if (booksGenreId) {
     url.searchParams.set("booksGenreId", booksGenreId)
