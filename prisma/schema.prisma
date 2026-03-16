@@ -50,7 +50,7 @@ model User {
   accounts          Account[]
   likes             Like[]
   sessions          Session[]
-  userTagPreference UserTagPreference[]
+  userTagScore      UserTagScore[]
   wishes            Wish[]
   userBookTag       UserBookTag[]
 
@@ -89,7 +89,7 @@ model Tag {
   category          TagCategory
   weight            Float               @default(1.0)
   bookTags          BookTag[]
-  userTagPreference UserTagPreference[]
+  userTagScore      UserTagScore[]
   userBookTag       UserBookTag[]
 }
 
