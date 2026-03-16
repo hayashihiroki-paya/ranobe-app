@@ -27,6 +27,12 @@ import { NextResponse } from "next/server"
 // ---------------------------------------------
 import { mapBooksToRakutenBooks } from "@/lib/mappers/bookMapper"
 
+// 型指定エラー回避用
+import { Prisma } from "@prisma/client"
+
+type LikeWithBook = Prisma.LikeGetPayload<{
+  include: { book: true }
+}>
 
 // ---------------------------------------------
 // GET /api/like/bookshelf
@@ -57,7 +63,7 @@ export async function GET() {
     // -------------------------------------------------
     // Likeテーブルからお気に入り取得
     // -------------------------------------------------
-    const likes = await prisma.like.findMany({
+    const likes: LikeWithBook[] = await prisma.like.findMany({
 
       // 自分のLikeのみ取得
       where: {
