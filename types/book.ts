@@ -7,6 +7,7 @@ import { z } from "zod"
 // ===============================================
 
 export type RakutenBook = {
+  // id: number
   title: string
   titleKana?: string
   author: string

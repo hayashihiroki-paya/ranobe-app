@@ -11,7 +11,7 @@ export default function LikeInitializer() {
 
     async function fetchLikes() {
 
-      const res = await fetch("/api/likes")
+      const res = await fetch("/api/like")
 
       if (!res.ok) return
 
