@@ -26,6 +26,7 @@ export type RakutenBook = {
 
 export type BookDisplay = RakutenBook & {
   comment?: string
+  score?: number
 }
 
 // ===============================================

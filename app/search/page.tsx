@@ -1,5 +1,4 @@
 // app/search/page.tsx
-import BookCardGrid from "@/features/book/components/BookCardGrid"
 import InfiniteBookList from "@/features/book/components/InfiniteBookList"
 import SearchBar from "@/features/search/components/SearchBar"
 
@@ -39,9 +38,9 @@ export default async function SearchPage({ searchParams }: Props) {
         検索結果
       </h1>
 
-      <p className="text-sm text-gray-500 mb-6">
+      {/* <p className="text-sm text-gray-500 mb-6">
         「{keyword}」の検索結果：{books.length}件
-      </p>
+      </p> */}
 
       <InfiniteBookList
         initialBooks={books}

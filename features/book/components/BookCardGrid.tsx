@@ -18,10 +18,12 @@ export default function BookCardGrid({ books }: Props) {
       lg:grid-cols-5
       gap-6
     ">
-      {books.map((item) => (
+      {books.map(book => (
         <BookCard
-          key={item.isbn}
-          book={item}
+          key={book.isbn}
+          book={book}
+          variant="recommend"
+          matchRate={book.score} // ⭐ ここ追加
         />
       ))}
     </div>

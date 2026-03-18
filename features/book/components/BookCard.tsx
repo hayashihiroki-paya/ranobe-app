@@ -111,8 +111,8 @@ export default function BookCard({
           お気に入り状態でカード色変更
         */
         ${liked
-          ? "border-pink-300 bg-pink-50"
-          : "border-gray-200 bg-white"}
+            ? "border-pink-300 bg-pink-50"
+            : "border-gray-200 bg-white"}
 
         shadow-sm
         hover:shadow-lg
@@ -125,6 +125,30 @@ export default function BookCard({
         cursor-pointer
       `}
       >
+
+        {/* ===============================
+            一致度バッジ
+        =============================== */}
+
+        {typeof matchRate === "number" && (
+          <div
+            className="
+              absolute
+              top-2
+              right-2
+              bg-orange-500
+              text-white
+              text-xs
+              px-2
+              py-1
+              rounded
+              shadow
+              font-semibold
+            "
+          >
+            {matchRate}%
+          </div>
+        )}
 
         {/* ===============================
             お気に入りバッジ
@@ -185,14 +209,27 @@ export default function BookCard({
             {book.author}
           </p>
 
+          {/* おすすめ度表示 */}
+          <div className="text-xs text-gray-600 flex flex-col gap-1">
+
+            {typeof matchRate === "number" && (
+              <span>🔥 一致度 {matchRate}%</span>
+            )}
+
+            {likeCount && (
+              <span>⭐ ココ好き {likeCount}件</span>
+            )}
+
+          </div>
+
           {/* ===============================
               検索ページ用UI
           =============================== */}
 
-          {variant === "search" && (
+          {/* {variant === "search" && (
             <div className="text-xs text-gray-600 flex flex-col gap-1">
 
-              {matchRate && (
+              {typeof matchRate === "number" && (
                 <span>🔥 一致度 {matchRate}%</span>
               )}
 
@@ -201,27 +238,27 @@ export default function BookCard({
               )}
 
             </div>
-          )}
+          )} */}
 
           {/* ===============================
               おすすめページ
           =============================== */}
 
-          {variant === "recommend" && recommendReason && (
+          {/* {variant === "recommend" && recommendReason && (
             <p className="text-xs text-orange-600">
               🔥 {recommendReason}
             </p>
-          )}
+          )} */}
 
           {/* ===============================
               本棚ページ
           =============================== */}
 
-          {variant === "shelf" && shelfDate && (
+          {/* {variant === "shelf" && shelfDate && (
             <p className="text-xs text-gray-500">
               登録日 {shelfDate}
             </p>
-          )}
+          )} */}
 
           {/* ===============================
               あらすじ
