@@ -22,8 +22,14 @@ export default function InfiniteBookList({
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
-  async function loadMore() {
+  // 🔥 ① 検索ワード変更時にリセット（最重要）
+  useEffect(() => {
+    setBooks(initialBooks)
+    setPage(2)
+    setHasMore(true)
+  }, [initialBooks, keyword])
 
+  async function loadMore() {
     if (loading || !hasMore) return
 
     setLoading(true)
@@ -37,7 +43,6 @@ export default function InfiniteBookList({
     // -------------------
     // 終了判定
     // -------------------
-
     if (newBooks.length === 0) {
       setHasMore(false)
       setLoading(false)
@@ -54,26 +59,28 @@ export default function InfiniteBookList({
     setLoading(false)
   }
 
+  // 🔥 ② observerをkeyword変更でも作り直す
   useEffect(() => {
 
     const observer = new IntersectionObserver(
       (entries) => {
-
         if (entries[0].isIntersecting) {
           loadMore()
         }
-
       },
       { threshold: 0.1 }
     )
 
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current)
+    const current = loadMoreRef.current
+    if (current) {
+      observer.observe(current)
     }
 
-    return () => observer.disconnect()
+    return () => {
+      if (current) observer.unobserve(current)
+    }
 
-  }, [page, hasMore])
+  }, [page, hasMore, keyword]) // ← keyword追加
 
   return (
     <>

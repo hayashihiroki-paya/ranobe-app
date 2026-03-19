@@ -17,8 +17,8 @@ export default function Header() {
 
         <div style={{ display: "flex", gap: 12 }}>
 
-          <Link href="/search">
-            検索
+          <Link href="/recommend">
+            おすすめ作品を見る
           </Link>
 
           <Link href="/library">

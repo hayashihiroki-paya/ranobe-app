@@ -2,6 +2,7 @@
 
 import SearchBar from "@/features/search/components/SearchBar"
 import Link from "next/link"
+import { Suspense } from "react"
 
 export default function Home() {
 
@@ -10,7 +11,9 @@ export default function Home() {
 
       {/* 検索バー */}
 
-      <SearchBar />
+      <Suspense fallback={<div>Loading...</div>}>
+        <SearchBar />
+      </Suspense>
 
       {/* おすすめ */}
 

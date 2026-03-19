@@ -1,16 +1,25 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useEffect } from "react"
 
 export default function SearchBar() {
 
   const router = useRouter()
-  const [keyword, setKeyword] = useState("")
+  const searchParams = useSearchParams()
+
+  const q = searchParams.get("q") ?? ""
+  const [keyword, setKeyword] = useState(q)
+
+  // URLが変わったときにinputも更新
+  useEffect(() => {
+    setKeyword(q)
+  }, [q])
 
   const handleSearch = () => {
-    if (!keyword) return
+    if (!keyword.trim()) return
     router.push(`/search?q=${keyword}`)
+    router.refresh()
   }
 
   return (

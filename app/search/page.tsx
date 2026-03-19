@@ -3,9 +3,9 @@ import InfiniteBookList from "@/features/book/components/InfiniteBookList"
 import SearchBar from "@/features/search/components/SearchBar"
 
 type Props = {
-  searchParams: Promise<{
+  searchParams: {
     q?: string
-  }>
+  }
 }
 
 async function searchBooks(keyword: string) {
@@ -37,10 +37,6 @@ export default async function SearchPage({ searchParams }: Props) {
       <h1 className="text-xl font-bold mb-2">
         検索結果
       </h1>
-
-      {/* <p className="text-sm text-gray-500 mb-6">
-        「{keyword}」の検索結果：{books.length}件
-      </p> */}
 
       <InfiniteBookList
         initialBooks={books}
