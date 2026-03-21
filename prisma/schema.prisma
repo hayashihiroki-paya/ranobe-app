@@ -53,7 +53,7 @@ model User {
   userTagScore      UserTagScore[]
   wishes            Wish[]
   userBookTag       UserBookTag[]
-
+  onboardingDone    Boolean @default(false)
 }
 
 model Account {

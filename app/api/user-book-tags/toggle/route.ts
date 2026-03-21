@@ -80,6 +80,16 @@ export async function POST(req: Request) {
         }
       })
 
+      // 🔥 userTagScore 減点
+      await prisma.userTagScore.updateMany({
+        where: { userId, tagId },
+        data: {
+          score: {
+            decrement: 1,
+          }
+        }
+      })
+
       return NextResponse.json({
         status: "removed"
       })
@@ -95,6 +105,25 @@ export async function POST(req: Request) {
         tagId,
         score: 1
       }
+    })
+
+    await prisma.userTagScore.upsert({
+      where: {
+        userId_tagId: {
+          userId: session.user.id,
+          tagId,
+        },
+      },
+      update: {
+        score: {
+          increment: 1, // 🔥 行動で増やす
+        },
+      },
+      create: {
+        userId: session.user.id,
+        tagId,
+        score: 1,
+      },
     })
 
     return NextResponse.json({

@@ -59,18 +59,40 @@ export default function WishButton({ book }: Props) {
         e.stopPropagation()
         handleClick()
       }}
-
       disabled={loading}
-
       className={`
-        text-xs
-        px-2
-        py-1
-        rounded
-        transition
+        flex items-center justify-center gap-2
+
+        text-sm font-medium
+        px-4 py-2
+        rounded-xl
+
+        transition-all duration-200
+
         ${wished
-          ? "bg-yellow-100 text-yellow-700"
-          : "bg-gray-100 text-gray-600"}
+          ? `
+              bg-gradient-to-r from-yellow-300 to-amber-300
+              text-white
+              shadow-md
+              hover:from-yellow-400 hover:to-amber-400
+            `
+          : `
+              bg-white
+              text-gray-700
+              border border-gray-200
+              shadow-sm
+              hover:bg-yellow-50
+            `
+        }
+
+        hover:-translate-y-0.5
+        hover:shadow-lg
+
+        active:translate-y-0
+        active:shadow-sm
+
+        disabled:opacity-50
+        disabled:cursor-not-allowed
       `}
     >
 

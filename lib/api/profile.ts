@@ -34,3 +34,18 @@ export async function getUserTagStats(userId: string) {
     };
   });
 }
+
+export async function getUserStats(userId: string) {
+  const likeCount = await prisma.like.count({
+    where: { userId },
+  })
+
+  const tagCount = await prisma.userBookTag.count({
+    where: { userId },
+  })
+
+  return {
+    likeCount,
+    tagCount,
+  }
+}

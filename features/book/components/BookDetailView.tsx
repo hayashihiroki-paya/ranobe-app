@@ -1,3 +1,4 @@
+// features\book\components\BookDetailView.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -7,6 +8,7 @@ import { RakutenBook } from "@/types/book"
 
 type Props = {
   book: RakutenBook
+  onOpenTagModal: () => void
 }
 
 // ---------------------------------------------
@@ -49,7 +51,7 @@ async function fetchRecommendDetail(isbn: string): Promise<RecommendDetail> {
   return res.json() as Promise<RecommendDetail>
 }
 
-export default function BookDetailView({ book }: Props) {
+export default function BookDetailView({ book, onOpenTagModal }: Props) {
 
   const [expanded, setExpanded] = useState(false)
   const [activeTab, setActiveTab] = useState<"recommend" | "input" | "trend">("recommend")
@@ -159,9 +161,42 @@ export default function BookDetailView({ book }: Props) {
       </div>
 
       {/* アクション */}
-      <div className="border-t mt-6 pt-4 flex gap-4">
-        <WishButton book={book} />
-        <LikeButton book={book} />
+      <div className="border-t mt-6 pt-4">
+        <div className="flex gap-3">
+
+
+          <WishButton book={book} />
+
+
+          <LikeButton book={book} />
+
+
+          <button
+            onClick={onOpenTagModal}
+            className="
+              flex items-center justify-center gap-2
+
+              px-4 py-2
+              rounded-xl
+
+              bg-gradient-to-r from-pink-400 to-orange-300
+              text-white font-medium text-sm
+
+              shadow-md
+              transition-all duration-200
+
+              hover:shadow-lg
+              hover:-translate-y-0.5
+              hover:from-pink-500 hover:to-orange-400
+
+              active:translate-y-0
+              active:shadow-sm
+            "
+          >
+            📝 タグ編集
+          </button>
+
+        </div>
       </div>
 
       {/* タブ */}
@@ -172,11 +207,10 @@ export default function BookDetailView({ book }: Props) {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1 rounded ${
-                activeTab === tab
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200"
-              }`}
+              className={`px-3 py-1 rounded ${activeTab === tab
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200"
+                }`}
             >
               {tab === "recommend" && "⭐ おすすめ理由"}
               {tab === "input" && "✏ ココ好き入力"}

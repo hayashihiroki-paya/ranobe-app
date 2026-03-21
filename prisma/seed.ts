@@ -32,12 +32,12 @@ async function main() {
     // ① ユーザー（そのまま）
     // ===============================
     const usersData = [
-        { name: "バトル太郎", email: "battle@test.com" },
-        { name: "恋愛花子", email: "love@test.com" },
-        { name: "異世界一郎", email: "isekai@test.com" },
-        { name: "ダーク次郎", email: "dark@test.com" },
-        { name: "戦略家", email: "strategy@test.com" },
-        { name: "癒し系", email: "healing@test.com" },
+        { name: "バトル太郎", email: "battle@test.com", onboardingDone: false },
+        { name: "恋愛花子", email: "love@test.com", onboardingDone: false },
+        { name: "異世界一郎", email: "isekai@test.com", onboardingDone: false },
+        { name: "ダーク次郎", email: "dark@test.com", onboardingDone: false },
+        { name: "戦略家", email: "strategy@test.com", onboardingDone: false },
+        { name: "癒し系", email: "healing@test.com", onboardingDone: false },
     ];
 
     const users = [];
@@ -234,7 +234,7 @@ async function main() {
 
             const mainTags = profile.mainTags;
             const noiseTag = shuffle(allTags)[0];
-            const finalTags = [...mainTags, noiseTag];
+            const finalTags = Array.from(new Set([...mainTags, noiseTag]));
 
             for (const tagKey of finalTags) {
                 const tag = tagMap[tagKey];

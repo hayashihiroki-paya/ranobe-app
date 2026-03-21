@@ -8,12 +8,18 @@ declare module "next-auth" {
       id: string
       name?: string | null
       email?: string | null
+      onboardingDone?: boolean
     }
+  }
+
+  interface User {
+    onboardingDone?: boolean
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     id?: string
+    onboardingDone?: boolean
   }
 }

@@ -10,22 +10,19 @@ type TagCount = {
 export async function getRecommendBooks(userId: string) {
 
   // ---------------------------------------------
-  // 1. ユーザータグ（回数付き）
+  // 1. ユーザータグ（スコア付き）
   // ---------------------------------------------
-  const userTagRaw = await prisma.userBookTag.groupBy({
-    by: ["tagId"],
+  const userTags = await prisma.userTagScore.findMany({
     where: { userId },
-    _count: { tagId: true },
-  });
+    select: {
+      tagId: true,
+      score: true,
+    },
+  })
 
-  const userTags: TagCount[] = userTagRaw.map(t => ({
-    tagId: t.tagId,
-    count: t._count.tagId,
-  }));
+  if (userTags.length === 0) return []
 
-  if (userTags.length === 0) return [];
-
-  const userTotal = userTags.reduce((sum, t) => sum + t.count, 0);
+  const userTotal = userTags.reduce((sum, t) => sum + t.score, 0)
 
   // ---------------------------------------------
   // 2. Like済み除外
@@ -84,15 +81,15 @@ export async function getRecommendBooks(userId: string) {
     let matchCount = 0;
 
     for (const u of userTags) {
-      const b = bookTags.find(bt => bt.tagId === u.tagId);
+      const b = bookTags.find(bt => bt.tagId === u.tagId)
 
       if (b) {
-        matchCount++;
+        matchCount++
 
-        const userWeight = u.count / userTotal;
-        const bookWeight = b.count / bookTotal;
+        const userWeight = u.score / userTotal
+        const bookWeight = b.count / bookTotal
 
-        score += userWeight * bookWeight;
+        score += userWeight * bookWeight
       }
     }
 
@@ -137,6 +134,7 @@ export async function getRecommendBooks(userId: string) {
       title: book?.title ?? "",
       author: book?.author ?? "",
       largeImageUrl: book?.largeImageUrl ?? "",
+      itemCaption: book?.itemCaption ?? "",
 
       matchCount: r.matchCount,
       score: Math.round(r.score * 100),

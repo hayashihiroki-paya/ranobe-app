@@ -13,6 +13,7 @@ export default async function RecommendPage() {
     return <p className="p-6">ログインしてください</p>;
   }
 
+  // ユーザーにお勧めの本をスコアが高い順に並び変えて取得する
   const books = await getRecommendBooks(session.user.id);
 
   // ---------------------------------------------
@@ -23,14 +24,14 @@ export default async function RecommendPage() {
     title: b.title,
     author: b.author,
     largeImageUrl: b.largeImageUrl,
-    itemCaption: "",
+    itemCaption: b.itemCaption,
 
     // ⭐ ここ追加
     score: b.score,
   }));
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="max-w-7xl mx-auto px-6 py-6">
       <h1 className="text-2xl font-bold mb-6">
         あなたへのおすすめ
       </h1>

@@ -8,30 +8,57 @@ import { Suspense } from "react";
 import BookGridSkeleton from "@/features/profile/components/skeleton/BookGridSkeleton";
 import TagStatsSkeleton from "@/features/profile/components/skeleton/TagStatsSkeleton";
 import UserCardSkeleton from "@/features/profile/components/skeleton/UserCardSkeleton";
+import UserStatsCards from "@/features/profile/components/UserStatsCards";
 
 
 export default async function ProfilePage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions)
 
   if (!session?.user?.email) {
-    return <div>ログインしてください</div>;
+    return <div>ログインしてください</div>
   }
 
   return (
-    <div className="space-y-8 p-6">
-      <UserInfo />
+    <div className="px-4 py-8">
 
-      <Suspense fallback={<TagStatsSkeleton />}>
-        <TagStats />
-      </Suspense>
+      <div className="max-w-6xl mx-auto space-y-8">
 
-      <Suspense fallback={<BookGridSkeleton />}>
-        <RecommendSection />
-      </Suspense>
+        {/* 👤 ヘッダー */}
+        <UserInfo />
 
-      <Suspense fallback={<UserCardSkeleton />}>
-        <SimilarUsers />
-      </Suspense>
+        {/* 📊 ダッシュボードメイン */}
+        <div className="grid lg:grid-cols-3 gap-6">
+
+          {/* 左（メイン） */}
+          <div className="lg:col-span-2 space-y-6">
+
+            <Suspense fallback={<TagStatsSkeleton />}>
+              <TagStats />
+            </Suspense>
+
+            <Suspense fallback={<BookGridSkeleton />}>
+              <RecommendSection />
+            </Suspense>
+
+          </div>
+
+          {/* 右（サイド） */}
+          <div className="space-y-6">
+
+            <Suspense fallback={<div>Loading...</div>}>
+              <UserStatsCards />
+            </Suspense>
+
+            <Suspense fallback={<UserCardSkeleton />}>
+              <SimilarUsers />
+            </Suspense>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
-  );
+  )
 }

@@ -48,11 +48,46 @@ export default function LikeButton({ book }: Props) {
         }}
         disabled={loading}
         className={`
-          text-xs px-2 py-1 rounded transition
-          ${liked ? "bg-pink-100 text-pink-600" : "bg-gray-100 text-gray-600"}
+          flex items-center justify-center gap-2
+
+          text-sm font-medium
+          px-4 py-2
+          rounded-xl
+
+          transition-all duration-200
+
+          ${
+            liked
+              ? `
+                bg-gradient-to-r from-pink-400 to-rose-400
+                text-white
+                shadow-md
+                hover:from-pink-500 hover:to-rose-500
+              `
+              : `
+                bg-white
+                text-gray-700
+                border border-gray-200
+                shadow-sm
+                hover:bg-pink-50
+              `
+          }
+
+          hover:-translate-y-0.5
+          hover:shadow-lg
+
+          active:translate-y-0
+          active:shadow-sm
+
+          disabled:opacity-50
+          disabled:cursor-not-allowed
         `}
       >
-        {loading ? "更新中..." : liked ? "❤️ お気に入り済み" : "🤍 お気に入り"}
+        {loading
+          ? "更新中..."
+          : liked
+            ? "❤️ 登録済み"
+            : "🤍 お気に入り"}
       </button>
     </>
   )

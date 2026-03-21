@@ -36,22 +36,13 @@ export const authOptions = {
           user.password
         )
 
-        console.log("isValid",isValid);
-
         if (!isValid) return null
-
-        const con = {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        }
-
-        console.log("返り値",con);
 
         return {
           id: user.id,
           name: user.name,
           email: user.email,
+          onboardingDone: user.onboardingDone, // 👈 追加
         }
       },
     }),
@@ -62,19 +53,40 @@ export const authOptions = {
   },
 
   callbacks: {
-  async jwt({ token, user }) {
-    if (user) {
-      token.id = user.id
-    }
-    return token
+    // 🔥 JWTに保存
+    async jwt({ token, user }) {
+      // 初回ログイン時
+      if (user) {
+        token.id = user.id
+        token.onboardingDone = user.onboardingDone ?? false
+      }
+
+      // Googleログイン時など（userが無い場合の補完）
+      if (token.email && token.onboardingDone === undefined) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+        })
+
+        token.onboardingDone = dbUser?.onboardingDone ?? false
+      }
+
+      return token
+    },
+
+    // 🔥 sessionに渡す
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string
+        session.user.onboardingDone = token.onboardingDone as boolean
+      }
+      return session
+    },
   },
-  async session({ session, token }) {
-    if (session.user) {
-      session.user.id = token.id as string
-    }
-    return session
+
+  // 👇 ログインページ指定（これ重要）
+  pages: {
+    signIn: "/login",
   },
-},
 
   secret: process.env.NEXTAUTH_SECRET,
 } satisfies import("next-auth").AuthOptions

@@ -1,3 +1,4 @@
+// app\novel\[isbn]\BookPageClientWrapper.tsx
 "use client"
 
 import { useState } from "react"
@@ -14,15 +15,18 @@ export default function BookPageClientWrapper({
   userId: string | null
 }) {
   const [openTagModal, setOpenTagModal] = useState(false);
-  console.log("book.isbn",book.isbn);
+  console.log("book.isbn", book.isbn);
 
   if (!userId) return <div>ログインしてください</div>
 
   return (
     <div className="p-6">
-      <BookDetailView book={book} />
+      <BookDetailView
+        book={book}
+        onOpenTagModal={() => setOpenTagModal(true)}
+      />
 
-      <div className="mt-4">
+      {/* <div className="mt-4">
         <LikeButton book={book} />
       </div>
 
@@ -31,7 +35,7 @@ export default function BookPageClientWrapper({
         onClick={() => setOpenTagModal(true)}
       >
         好きな要素を編集
-      </button>
+      </button> */}
 
       <TagModal
         isbn={book.isbn}

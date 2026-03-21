@@ -4,6 +4,7 @@ import Providers from "@/components/Providers"
 import "./globals.css"
 import LikeInitializer from "@/features/like/components/LikeInitializer"
 import TagModalRoot from "@/features/tag/components/TagModalRoot"
+import { Toaster } from "sonner" // 👈 追加
 
 export default function RootLayout({
   children,
@@ -20,6 +21,9 @@ export default function RootLayout({
 
           <Header />
           {children}
+
+          {/* 👇 ここに追加（重要） */}
+          <Toaster richColors position="top-center" />
 
         </Providers>
 

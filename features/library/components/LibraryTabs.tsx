@@ -1,3 +1,4 @@
+// features\library\components\LibraryTabs.tsx
 "use client"
 
 /*
@@ -8,6 +9,7 @@ import { useState } from "react"
 
 import { RakutenBook } from "@/types/book"
 import BookCard from "@/features/book/components/BookCard"
+import BookCardGrid from "@/features/book/components/BookCardGrid"
 
 type Props = {
 
@@ -82,8 +84,18 @@ export default function LibraryTabs({
       {/* ------------------------
           本カード
       ------------------------ */}
+      <div className="p-6 max-w-6xl mx-auto">
 
-      <div
+        {books.length === 0 && (
+          <p className="text-gray-500">
+            まだ登録がありません。保存してみましょう！
+          </p>
+        )}
+
+        <BookCardGrid books={books} />
+      </div>
+
+      {/* <div
         className="
         grid
         grid-cols-2
@@ -105,7 +117,7 @@ export default function LibraryTabs({
 
         ))}
 
-      </div>
+      </div> */}
 
     </div>
 
