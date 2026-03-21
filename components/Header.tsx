@@ -20,6 +20,10 @@ export default function Header() {
           <Link href="/recommend">
             おすすめ作品を見る
           </Link>
+          
+          <Link href="/profile">
+            プロフィールページ
+          </Link>
 
           <Link href="/library">
             マイライブラリ
