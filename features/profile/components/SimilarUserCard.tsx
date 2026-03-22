@@ -4,7 +4,7 @@ type Props = {
   id: string;
   name: string;
   score: number;
-  tags?: string[]; // 後で使う
+  tags?: string[];
 };
 
 export default function SimilarUserCard({
@@ -14,29 +14,42 @@ export default function SimilarUserCard({
   tags = [],
 }: Props) {
   return (
-    <div className="border rounded-xl p-4 shadow-sm hover:shadow-md transition bg-white">
-      {/* ユーザー名 */}
-      <div className="font-bold text-lg mb-1">👤 {name}</div>
+    <Link
+      href={`/users/${id}`}
+      className="
+        flex items-center justify-between
+        border rounded-xl
+        px-4 py-3
+        bg-white
+        shadow-sm hover:shadow-md
+        transition
+      "
+    >
+      {/* 左エリア */}
+      <div className="flex flex-col min-w-0">
+        {/* 名前 */}
+        <p className="font-semibold text-sm truncate">
+          👤 {name}
+        </p>
 
-      {/* 一致度 */}
-      <div className="text-sm text-gray-600 mb-2">
-        一致度 <span className="font-semibold">{score}%</span>
+        {/* タグ */}
+        {tags.length > 0 && (
+          <p className="text-xs text-gray-500 truncate">
+            {tags.slice(0, 3).join(" / ")}
+          </p>
+        )}
       </div>
 
-      {/* タグ（あれば） */}
-      {tags.length > 0 && (
-        <div className="text-xs text-gray-500 mb-3">
-          {tags.slice(0, 3).join(" / ")}
+      {/* 右エリア */}
+      <div className="flex items-center gap-3 shrink-0">
+        {/* 一致度 */}
+        <div className="text-sm font-semibold text-blue-600">
+          {score}%
         </div>
-      )}
 
-      {/* ボタン */}
-      <Link
-        href={`/users/${id}`}
-        className="text-sm text-blue-500 hover:underline"
-      >
-        プロフィールを見る →
-      </Link>
-    </div>
+        {/* 矢印 */}
+        <span className="text-gray-400">→</span>
+      </div>
+    </Link>
   );
 }

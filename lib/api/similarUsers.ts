@@ -1,11 +1,21 @@
+// lib\api\similarUsers.ts
 import { prisma } from "@/lib/prisma";
 
 // タグMap化
-function toTagMap(tags: { tagId: string }[]) {
+function mergeTagMap(
+  usage: { tagId: string }[],
+  scores: { tagId: string; score: number }[]
+) {
   const map: Record<string, number> = {};
 
-  for (const t of tags) {
+  // 行動（回数）
+  for (const t of usage) {
     map[t.tagId] = (map[t.tagId] || 0) + 1;
+  }
+
+  // 初期スコア（重み）
+  for (const s of scores) {
+    map[s.tagId] = (map[s.tagId] || 0) + s.score;
   }
 
   return map;
@@ -35,7 +45,7 @@ function calcSimilarity(
 }
 
 export async function getSimilarUsers(userId: string) {
-  // 🔥 全ユーザーのタグを一発取得
+  // 🔥 行動データ
   const allTags = await prisma.userBookTag.findMany({
     select: {
       userId: true,
@@ -43,21 +53,45 @@ export async function getSimilarUsers(userId: string) {
     },
   });
 
-  // 🔥 ユーザーごとにまとめる
+  // 🔥 初期スコア
+  const allScores = await prisma.userTagScore.findMany({
+    select: {
+      userId: true,
+      tagId: true,
+      score: true,
+    },
+  });
+
+  // ----------------------------
+  // ユーザーごとにまとめる
+  // ----------------------------
+
   const userTagMap: Record<string, { tagId: string }[]> = {};
+  const userScoreMap: Record<string, { tagId: string; score: number }[]> = {};
 
   for (const t of allTags) {
-    if (!userTagMap[t.userId]) {
-      userTagMap[t.userId] = [];
-    }
+    if (!userTagMap[t.userId]) userTagMap[t.userId] = [];
     userTagMap[t.userId].push({ tagId: t.tagId });
   }
 
-  // 自分のタグ
-  const myTags = userTagMap[userId] || [];
-  const myMap = toTagMap(myTags);
+  for (const s of allScores) {
+    if (!userScoreMap[s.userId]) userScoreMap[s.userId] = [];
+    userScoreMap[s.userId].push({
+      tagId: s.tagId,
+      score: s.score,
+    });
+  }
 
-  // ユーザー情報まとめて取得
+  // ----------------------------
+  // 自分のベクトル
+  // ----------------------------
+
+  const myMap = mergeTagMap(
+    userTagMap[userId] || [],
+    userScoreMap[userId] || []
+  );
+
+  // ユーザー一覧
   const users = await prisma.user.findMany({
     where: {
       NOT: { id: userId },
@@ -71,23 +105,21 @@ export async function getSimilarUsers(userId: string) {
   const result = [];
 
   for (const user of users) {
-    const tags = userTagMap[user.id] || [];
+    const map = mergeTagMap(
+      userTagMap[user.id] || [],
+      userScoreMap[user.id] || []
+    );
 
-    const map = toTagMap(tags);
     const score = calcSimilarity(myMap, map);
 
     if (score === 0) continue;
 
-    // 🔥 上位タグ（メモリで計算）
-    const tagCount: Record<string, number> = {};
-    for (const t of tags) {
-      tagCount[t.tagId] = (tagCount[t.tagId] || 0) + 1;
-    }
-
-    const topTagIds = Object.entries(tagCount)
+    // 🔥 上位タグ（合算ベースに変更）
+    const tagEntries = Object.entries(map)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([tagId]) => tagId);
+      .slice(0, 3);
+
+    const topTagIds = tagEntries.map(([tagId]) => tagId);
 
     result.push({
       id: user.id,
@@ -97,17 +129,17 @@ export async function getSimilarUsers(userId: string) {
     });
   }
 
-  // タグ名をまとめて取得（1回）
+  // タグ名取得
   const allTagIds = [...new Set(result.flatMap((r) => r.topTagIds))];
 
-  const tagMap = await prisma.tag.findMany({
+  const tags = await prisma.tag.findMany({
     where: {
       id: { in: allTagIds },
     },
   });
 
   const tagNameMap: Record<string, string> = {};
-  for (const t of tagMap) {
+  for (const t of tags) {
     tagNameMap[t.id] = t.name;
   }
 

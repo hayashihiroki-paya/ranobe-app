@@ -1,3 +1,4 @@
+// features\profile\components\UserStatsCards.tsx
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 import { getUserStats } from "@/lib/api/profile"
@@ -25,7 +26,7 @@ export default async function UserStatsCards() {
       {/* タグ数 */}
       <div className="bg-white rounded-xl border p-4 shadow-sm">
         <p className="text-xs text-gray-500 mb-1">
-          入力タグ数
+          登録タグ数
         </p>
         <p className="text-2xl font-bold">
           {stats.tagCount}

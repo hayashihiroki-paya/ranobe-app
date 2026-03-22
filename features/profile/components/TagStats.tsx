@@ -46,7 +46,7 @@ export default async function TagStats() {
               <div className="flex-1">
                 <div className="flex justify-between text-sm mb-1">
                   <span className="font-medium">{tag.name}</span>
-                  <span className="text-gray-500">{tag.count}回</span>
+                  <span className="text-gray-500">{tag.count}pt</span>
                 </div>
 
                 {/* バー */}

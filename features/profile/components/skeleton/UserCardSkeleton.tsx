@@ -2,7 +2,7 @@
 
 export default function UserCardSkeleton() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="flex flex-col gap-3">
       {[...Array(6)].map((_, i) => (
         <div
           key={i}
