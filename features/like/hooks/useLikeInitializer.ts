@@ -1,36 +1,35 @@
+// features\like\hooks\useLikeInitializer.ts
 "use client"
 
 import { useEffect } from "react"
 import { useLikeStore } from "../store/useLikeStore"
+import { useSession } from "next-auth/react"
 
-export function useLikeInitializer() {
+export default function useLikeInitializer() {
 
-  const setLikes = useLikeStore((state) => state.setLikes)
+  const { status } = useSession()
+
+  const setLikes = useLikeStore((s) => s.setLikes)
 
   useEffect(() => {
 
-    const init = async () => {
+    if (status !== "authenticated") return
 
-      try {
+    async function fetchLikes() {
 
-        const res = await fetch("/api/like")
+      const res = await fetch("/api/like")
 
-        if (!res.ok) return
+      if (!res.ok) return
 
-        const data = await res.json()
+      const data = await res.json()
 
-        setLikes(data)
-
-      } catch (err) {
-
-        console.error(err)
-
-      }
+      setLikes(data)
 
     }
 
-    init()
+    fetchLikes()
 
   }, [setLikes])
 
+  return null
 }

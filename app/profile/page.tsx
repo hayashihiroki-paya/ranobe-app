@@ -1,3 +1,4 @@
+// app\profile\page.tsx
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 import RecommendSection from "@/features/profile/components/RecommendSection";
@@ -19,7 +20,7 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="px-4 py-8">
+    <div className="px-4 py-8 animate-fade-in">
 
       <div className="max-w-6xl mx-auto space-y-8">
 

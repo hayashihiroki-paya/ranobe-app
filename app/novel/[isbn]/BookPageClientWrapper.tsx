@@ -15,7 +15,7 @@ export default function BookPageClientWrapper({
   userId: string | null
 }) {
   const [openTagModal, setOpenTagModal] = useState(false);
-  console.log("book.isbn", book.isbn);
+  // console.log("book.isbn", book.isbn);
 
   if (!userId) return <div>ログインしてください</div>
 

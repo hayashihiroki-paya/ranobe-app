@@ -31,7 +31,9 @@ export async function GET(
     });
 
     if (!book) {
-      return NextResponse.json({ error: "Bookが存在しません" }, { status: 404 });
+      // return NextResponse.json({ error: "Bookが存在しません" }, { status: 404 });
+      
+      return NextResponse.json(null);
     }
 
     const bookId = book.id;

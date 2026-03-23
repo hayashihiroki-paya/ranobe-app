@@ -14,7 +14,7 @@ export default async function Home() {
   const session = await getServerSession(authOptions);
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-6">
+    <main className="max-w-7xl mx-auto px-6 py-6 animate-fade-in">
       {/* 検索バー */}
       <Suspense fallback={<div className="h-12 bg-gray-200 animate-pulse rounded" />}>
         <SearchBar />

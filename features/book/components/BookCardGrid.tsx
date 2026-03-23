@@ -21,13 +21,19 @@ export default function BookCardGrid({ books }: Props) {
         lg:[grid-template-columns:repeat(auto-fit,minmax(220px,220px))]
         "
     >
-      {books.map((book) => (
-        <BookCard
+      {books.map((book, i) => (
+        <div
           key={book.isbn}
-          book={book}
-          variant="recommend"
-          matchRate={book.score}
-        />
+          className="animate-fade-in"
+          style={{ animationDelay: `${i * 40}ms` }}
+        >
+          <BookCard
+            key={book.isbn}
+            book={book}
+            variant="recommend"
+            matchRate={book.score}
+          />
+        </div>
       ))}
     </div>
   )

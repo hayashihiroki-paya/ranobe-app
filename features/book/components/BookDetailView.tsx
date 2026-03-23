@@ -1,7 +1,7 @@
 // features\book\components\BookDetailView.tsx
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import LikeButton from "@/features/like/components/LikeButton"
 import WishButton from "@/features/wish/components/WishButton"
 import { RakutenBook } from "@/types/book"
@@ -41,14 +41,18 @@ type RecommendDetail = {
 // ---------------------------------------------
 // フェッチ関数（型安全）
 // ---------------------------------------------
-async function fetchRecommendDetail(isbn: string): Promise<RecommendDetail> {
+async function fetchRecommendDetail(isbn: string): Promise<RecommendDetail | null> {
   const res = await fetch(`/api/books/${isbn}/recommend-detail`)
+
+  if (res.status === 404) {
+    return null // ← これがポイント
+  }
 
   if (!res.ok) {
     throw new Error("レコメンド取得に失敗しました")
   }
 
-  return res.json() as Promise<RecommendDetail>
+  return res.json()
 }
 
 export default function BookDetailView({ book, onOpenTagModal }: Props) {
@@ -103,7 +107,7 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       : null
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto p-6 animate-fade-in">
 
       <button
         onClick={() => history.back()}
@@ -113,7 +117,7 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       </button>
 
       {/* タイトル */}
-      <div className="flex justify-between items-start border-b pb-3">
+      <div className="flex justify-between items-start border-b pb-3 animate-fade-in">
 
         <div>
           <h1 className="text-2xl font-bold">{book.title}</h1>
@@ -128,7 +132,7 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       </div>
 
       {/* メイン */}
-      <div className="grid grid-cols-[180px_1fr] gap-6 py-6">
+      <div className="grid grid-cols-[180px_1fr] gap-6 py-6 animate-fade-in [animation-delay:0.05s]">
 
         <img
           src={book.largeImageUrl}
@@ -145,7 +149,7 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       </div>
 
       {/* あらすじ */}
-      <div className="border-t pt-4">
+      <div className="border-t pt-4 animate-fade-in [animation-delay:0.1s]">
 
         <p className={`text-sm text-gray-700 ${expanded ? "" : "line-clamp-4"}`}>
           {book.itemCaption}
@@ -161,7 +165,7 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       </div>
 
       {/* アクション */}
-      <div className="border-t mt-6 pt-4">
+      <div className="border-t mt-6 pt-4 animate-fade-in [animation-delay:0.15s]">
         <div className="flex gap-3">
 
 
@@ -200,7 +204,7 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       </div>
 
       {/* タブ */}
-      <div className="border-t mt-6 pt-4">
+      <div className="border-t mt-6 pt-4 animate-fade-in [animation-delay:0.2s]">
 
         <div className="flex gap-4 mb-4">
           {(["recommend", "input", "trend"] as const).map(tab => (

@@ -4,13 +4,16 @@ import Providers from "@/components/Providers"
 import "./globals.css"
 import LikeInitializer from "@/features/like/components/LikeInitializer"
 import TagModalRoot from "@/features/tag/components/TagModalRoot"
-import { Toaster } from "sonner" // 👈 追加
+import { Toaster } from "sonner"
+import { getServerSession } from "next-auth"
+import { authOptions } from "./api/auth/[...nextauth]/route"
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const session = await getServerSession(authOptions);
   return (
     <html lang="ja">
       <body>
@@ -22,12 +25,11 @@ export default function RootLayout({
           <Header />
           {children}
 
-          {/* 👇 ここに追加（重要） */}
           <Toaster richColors position="top-center" />
 
-        </Providers>
+          <TagModalRoot />
 
-        <TagModalRoot />
+        </Providers>
 
       </body>
     </html>
