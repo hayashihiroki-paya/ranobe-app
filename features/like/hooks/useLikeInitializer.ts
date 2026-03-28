@@ -23,13 +23,15 @@ export default function useLikeInitializer() {
 
       const data = await res.json()
 
+      if (!Array.isArray(data)) return
+
       setLikes(data)
 
     }
 
     fetchLikes()
 
-  }, [setLikes])
+  }, [status, setLikes])
 
   return null
 }
