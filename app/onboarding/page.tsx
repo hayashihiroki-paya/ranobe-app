@@ -50,8 +50,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full bg-white p-6 rounded-2xl shadow">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+      <div className="bg-white p-6 rounded-xl w-[520px] max-h-[80vh] shadow-lg">
 
         <h1 className="text-xl font-bold mb-2">
           好きな作品のタグを選んでください
