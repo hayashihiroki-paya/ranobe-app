@@ -9,8 +9,7 @@ const tags = [
   // ===============================
   // WORLD
   // ===============================
-  { name: "ハイファンタジー", key: "world_high_fantasy", category: TagCategory.WORLD },
-  { name: "ローファンタジー", key: "world_low_fantasy", category: TagCategory.WORLD },
+  { name: "ファンタジー", key: "world_fantasy", category: TagCategory.WORLD },
   { name: "現代ファンタジー", key: "world_modern_fantasy", category: TagCategory.WORLD },
   { name: "ゲーム世界", key: "world_game_world", category: TagCategory.WORLD },
   { name: "VRMMO", key: "world_vrmmo", category: TagCategory.WORLD },
@@ -80,7 +79,9 @@ const tags = [
   { name: "スローライフ", key: "setting_slow_life", category: TagCategory.SETTING },
   { name: "勘違い系", key: "setting_misunderstanding", category: TagCategory.SETTING },
   { name: "配信系", key: "setting_streaming", category: TagCategory.SETTING },
-  { name: "掲示板文化", key: "setting_forum_style", category: TagCategory.SETTING },
+  { name: "成り上がり", key: "setting_rise", category: TagCategory.SETTING },
+  { name: "復讐", key: "setting_revenge", category: TagCategory.SETTING },
+  { name: "逆転劇", key: "setting_turnaround", category: TagCategory.SETTING },
 
   // ===============================
   // RELATION
@@ -92,6 +93,8 @@ const tags = [
   { name: "ライバル", key: "relation_rival", category: TagCategory.RELATION },
   { name: "師弟", key: "relation_master_student", category: TagCategory.RELATION },
   { name: "先輩後輩", key: "relation_senpai_kouhai", category: TagCategory.RELATION },
+  { name: "兄弟姉妹", key: "relation_siblings", category: TagCategory.RELATION },
+  { name: "親子", key: "relation_parent_child", category: TagCategory.RELATION },
 
   // ===============================
   // CHARACTER
@@ -105,6 +108,8 @@ const tags = [
   { name: "元気系", key: "character_genki", category: TagCategory.CHARACTER },
   { name: "内気キャラ", key: "character_shy", category: TagCategory.CHARACTER },
   { name: "お嬢様", key: "character_ojousama", category: TagCategory.CHARACTER },
+  { name: "クール系", key: "character_cool", category: TagCategory.CHARACTER },
+  { name: "ドジっ子", key: "character_clumsy", category: TagCategory.CHARACTER },
 
   // ===============================
   // ABILITY

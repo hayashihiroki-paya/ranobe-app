@@ -4,30 +4,47 @@ import SearchBar from "@/features/search/components/SearchBar"
 
 type Props = {
   searchParams: {
-    q?: string
+    title?: string
+    isbn?: string
   }
 }
 
-async function searchBooks(keyword: string) {
+// ★ API呼び出しを統一
+async function searchBooks({
+  title,
+  isbn,
+}: {
+  title?: string
+  isbn?: string
+}) {
+  const baseUrl = `${process.env.NEXTAUTH_URL}/api/search`
 
-  const res = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/search?title=${keyword}`,
-    { cache: "no-store" }
-  )
+  const url = isbn
+    ? `${baseUrl}?isbn=${isbn}`
+    : `${baseUrl}?title=${encodeURIComponent(title!)}`
+
+  const res = await fetch(url, { cache: "no-store" })
 
   return res.json()
 }
 
 export default async function SearchPage({ searchParams }: Props) {
 
-  const { q } = await searchParams
-  const keyword = q
+  // ★ ここが重要
+  const { title, isbn } = await searchParams
+
+  const keyword = title || isbn
 
   if (!keyword) {
-    return <div>検索キーワードを入力してください</div>
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <SearchBar />
+        <div>検索キーワードを入力してください</div>
+      </div>
+    )
   }
 
-  const books = await searchBooks(keyword)
+  const books = await searchBooks({ title, isbn })
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-6">
@@ -41,6 +58,7 @@ export default async function SearchPage({ searchParams }: Props) {
       <InfiniteBookList
         initialBooks={books}
         keyword={keyword}
+        isbn={isbn}
       />
 
     </div>

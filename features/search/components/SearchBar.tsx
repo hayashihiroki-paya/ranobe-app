@@ -1,4 +1,3 @@
-// features\search\components\SearchBar.tsx
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
@@ -9,16 +8,35 @@ export default function SearchBar() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const q = searchParams.get("q") ?? ""
-  const [keyword, setKeyword] = useState(q)
+  // ★ title / isbn 両対応
+  const title = searchParams.get("title") ?? ""
+  const isbn = searchParams.get("isbn") ?? ""
+  const initialValue = title || isbn
+
+  const [keyword, setKeyword] = useState(initialValue)
 
   useEffect(() => {
-    setKeyword(q)
-  }, [q])
+    setKeyword(initialValue)
+  }, [initialValue])
+
+  // ★ ISBN判定
+  const isIsbn = (input: string) => {
+    const normalized = input.replace(/[-\s]/g, "")
+    return /^\d{10}(\d{3})?$/.test(normalized)
+  }
 
   const handleSearch = () => {
-    if (!keyword.trim()) return
-    router.push(`/search?q=${keyword}`)
+    const trimmed = keyword.trim()
+    if (!trimmed) return
+
+    const normalized = trimmed.replace(/[-\s]/g, "")
+
+    if (isIsbn(trimmed)) {
+      router.push(`/search?isbn=${normalized}`)
+    } else {
+      router.push(`/search?title=${encodeURIComponent(trimmed)}`)
+    }
+
     router.refresh()
   }
 
@@ -40,7 +58,7 @@ export default function SearchBar() {
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="タイトルで検索"
+          placeholder="タイトル or ISBNで検索"
           className="
             flex-1
             text-base

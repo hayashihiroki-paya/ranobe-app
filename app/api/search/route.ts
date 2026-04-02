@@ -8,12 +8,14 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
 
   const title = searchParams.get("title")
+  const isbn = searchParams.get("isbn") // ★追加
   const booksGenreId = searchParams.get("booksGenreId")
   const page = searchParams.get("page") ?? "1"
 
-  if (!title) {
+  // ★バリデーション変更
+  if (!title && !isbn) {
     return NextResponse.json(
-      { error: "title required" },
+      { error: "title or isbn required" },
       { status: 400 }
     )
   }
@@ -23,15 +25,22 @@ export async function GET(req: Request) {
   )
 
   url.searchParams.set("applicationId", process.env.RAKUTEN_APP_ID!)
-  url.searchParams.set("title", title)
-  url.searchParams.set("page", page)
 
-  if (booksGenreId) {
-    url.searchParams.set("booksGenreId", booksGenreId)
+  // ★ここが分岐ポイント
+  if (isbn) {
+    url.searchParams.set("isbn", isbn)
+  } else {
+    url.searchParams.set("title", title!)
+    url.searchParams.set("page", page)
+
+    if (booksGenreId) {
+      url.searchParams.set("booksGenreId", booksGenreId)
+    }
+
+    url.searchParams.set("hits", "20")
   }
 
   url.searchParams.set("format", "json")
-  url.searchParams.set("hits", "20")
 
   try {
 

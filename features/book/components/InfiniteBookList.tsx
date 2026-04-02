@@ -8,34 +8,43 @@ import BookSkeletonGrid from "./BookSkeletonGrid"
 type Props = {
   initialBooks: BookDisplay[]
   keyword: string
+  isbn?: string // ★追加
 }
 
 export default function InfiniteBookList({
   initialBooks,
-  keyword
+  keyword,
+  isbn
 }: Props) {
 
   const [books, setBooks] = useState(initialBooks)
   const [page, setPage] = useState(2)
   const [loading, setLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
+
+  // ★ ISBN時は最初からfalse
+  const [hasMore, setHasMore] = useState(!isbn)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
-  // 🔥 ① 検索ワード変更時にリセット（最重要）
+  // 🔥 ① 検索ワード変更時にリセット
   useEffect(() => {
     setBooks(initialBooks)
     setPage(2)
-    setHasMore(true)
-  }, [initialBooks, keyword])
+
+    // ★ ISBNならページングしない
+    setHasMore(!isbn)
+  }, [initialBooks, keyword, isbn])
 
   async function loadMore() {
+    // ★ ISBN時は何もしない
+    if (isbn) return
+
     if (loading || !hasMore) return
 
     setLoading(true)
 
     const res = await fetch(
-      `/api/search?title=${keyword}&page=${page}`
+      `/api/search?title=${encodeURIComponent(keyword)}&page=${page}`
     )
 
     const newBooks: BookDisplay[] = await res.json()
@@ -59,8 +68,11 @@ export default function InfiniteBookList({
     setLoading(false)
   }
 
-  // 🔥 ② observerをkeyword変更でも作り直す
+  // 🔥 ② observer
   useEffect(() => {
+
+    // ★ ISBN時はobserver不要
+    if (isbn) return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -80,7 +92,7 @@ export default function InfiniteBookList({
       if (current) observer.unobserve(current)
     }
 
-  }, [page, hasMore, keyword]) // ← keyword追加
+  }, [page, hasMore, keyword, isbn])
 
   return (
     <>
@@ -88,13 +100,13 @@ export default function InfiniteBookList({
 
       {loading && <BookSkeletonGrid />}
 
-      {/* スクロール監視 */}
-      {hasMore && (
+      {/* ★ ISBN時は非表示 */}
+      {!isbn && hasMore && (
         <div ref={loadMoreRef} className="h-10" />
       )}
 
       {/* 終了メッセージ */}
-      {!hasMore && (
+      {!hasMore && !isbn && (
         <p className="text-center text-gray-400 mt-10">
           これ以上の検索結果はありません
         </p>
