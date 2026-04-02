@@ -37,15 +37,15 @@ export default async function Home() {
         )}
       </section>
 
-      {/* 人気作品 */}
+      {/* 更新履歴など追加予定 */}
       <section>
-        <h2>📈 人気作品</h2>
+        {/* <h2>📈 人気作品</h2>
 
         <div className="flex gap-4">
           <Link href="/search">
             <div className="border p-4">仮カード</div>
           </Link>
-        </div>
+        </div> */}
       </section>
     </main>
   );
