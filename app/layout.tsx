@@ -8,6 +8,20 @@ import { Toaster } from "sonner"
 import { getServerSession } from "next-auth"
 import { authOptions } from "./api/auth/[...nextauth]/route"
 
+
+export const metadata = {
+  title: "ラノベならべ",
+  description: "細かい好みに合わせて新しいラノベを見つけ出す",
+  openGraph: {
+    title: "ラノベならべ",
+    description: "あなたの好きな要素からおすすめ作品を発見",
+    images: ["/ogp.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
+};
+
 export default async function RootLayout({
   children,
 }: {
