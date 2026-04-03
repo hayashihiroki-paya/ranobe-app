@@ -5,11 +5,11 @@
 // ---------------------------------------------
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { getRecommendBooks } from "@/lib/api/recommend/getRecommendBooks";
 
 // ---------------------------------------------
 // レコメンドロジック（共通化した関数）
 // ---------------------------------------------
-import { getRecommendBooks } from "@/lib/api/recommend";
 
 // ---------------------------------------------
 // GET /api/recommend

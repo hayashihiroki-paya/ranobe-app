@@ -1,7 +1,9 @@
-// lib\api\similarUsers.ts
+// lib/api/similarUsers.ts
 import { prisma } from "@/lib/prisma";
 
+// ---------------------------------------------
 // タグMap化
+// ---------------------------------------------
 function mergeTagMap(
   usage: { tagId: string }[],
   scores: { tagId: string; score: number }[]
@@ -13,7 +15,7 @@ function mergeTagMap(
     map[t.tagId] = (map[t.tagId] || 0) + 1;
   }
 
-  // 初期スコア（重み）
+  // 初期スコア
   for (const s of scores) {
     map[s.tagId] = (map[s.tagId] || 0) + s.score;
   }
@@ -21,31 +23,70 @@ function mergeTagMap(
   return map;
 }
 
-// 類似度
+// ---------------------------------------------
+// cosine類似度 + 安定版
+// ---------------------------------------------
 function calcSimilarity(
   a: Record<string, number>,
   b: Record<string, number>
 ) {
-  const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+  let commonCount = 0;
 
-  let minSum = 0;
-  let maxSum = 0;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  const allKeys = new Set([...keysA, ...keysB]);
 
   for (const key of allKeys) {
     const av = a[key] || 0;
     const bv = b[key] || 0;
 
-    minSum += Math.min(av, bv);
-    maxSum += Math.max(av, bv);
+    if (av > 0 && bv > 0) {
+      commonCount++;
+      dot += av * bv;
+    }
+
+    normA += av * av;
+    normB += bv * bv;
   }
 
-  if (maxSum === 0) return 0;
+  if (normA === 0 || normB === 0) {
+    return { score: 0, commonCount: 0 };
+  }
 
-  return Math.round((minSum / maxSum) * 100);
+  // 🎯 cosine
+  let score =
+    dot / (Math.sqrt(normA) * Math.sqrt(normB));
+
+  // ---------------------------------
+  // 🔥 フィルタ
+  // ---------------------------------
+
+  if (commonCount < 2) {
+    return { score: 0, commonCount };
+  }
+
+  // ---------------------------------
+  // 🔥 割合ベースボーナス（安全）
+  // ---------------------------------
+
+  const commonRatio =
+    commonCount / Math.min(keysA.length, keysB.length);
+
+  score += commonRatio * 0.2;
+
+  // 上限ガード
+  score = Math.min(score, 1);
+
+  return { score, commonCount };
 }
 
+// ---------------------------------------------
+// メイン処理
+// ---------------------------------------------
 export async function getSimilarUsers(userId: string) {
-  // 🔥 行動データ
   const allTags = await prisma.userBookTag.findMany({
     select: {
       userId: true,
@@ -53,7 +94,6 @@ export async function getSimilarUsers(userId: string) {
     },
   });
 
-  // 🔥 初期スコア
   const allScores = await prisma.userTagScore.findMany({
     select: {
       userId: true,
@@ -67,7 +107,10 @@ export async function getSimilarUsers(userId: string) {
   // ----------------------------
 
   const userTagMap: Record<string, { tagId: string }[]> = {};
-  const userScoreMap: Record<string, { tagId: string; score: number }[]> = {};
+  const userScoreMap: Record<
+    string,
+    { tagId: string; score: number }[]
+  > = {};
 
   for (const t of allTags) {
     if (!userTagMap[t.userId]) userTagMap[t.userId] = [];
@@ -83,7 +126,7 @@ export async function getSimilarUsers(userId: string) {
   }
 
   // ----------------------------
-  // 自分のベクトル
+  // 自分
   // ----------------------------
 
   const myMap = mergeTagMap(
@@ -110,11 +153,15 @@ export async function getSimilarUsers(userId: string) {
       userScoreMap[user.id] || []
     );
 
-    const score = calcSimilarity(myMap, map);
+    const { score, commonCount } = calcSimilarity(
+      myMap,
+      map
+    );
 
-    if (score === 0) continue;
+    // 🔥 弱すぎるの除外
+    if (score < 0.1) continue;
 
-    // 🔥 上位タグ（合算ベースに変更）
+    // 上位タグ
     const tagEntries = Object.entries(map)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3);
@@ -125,12 +172,17 @@ export async function getSimilarUsers(userId: string) {
       id: user.id,
       name: user.name ?? "ユーザー",
       score,
+      commonCount,
       topTagIds,
     });
   }
 
+  // ---------------------------------------------
   // タグ名取得
-  const allTagIds = [...new Set(result.flatMap((r) => r.topTagIds))];
+  // ---------------------------------------------
+  const allTagIds = [
+    ...new Set(result.flatMap((r) => r.topTagIds)),
+  ];
 
   const tags = await prisma.tag.findMany({
     where: {
@@ -143,13 +195,24 @@ export async function getSimilarUsers(userId: string) {
     tagNameMap[t.id] = t.name;
   }
 
+  // ---------------------------------------------
+  // 最終整形
+  // ---------------------------------------------
   return result
     .map((r) => ({
       id: r.id,
       name: r.name,
-      score: r.score,
-      tags: r.topTagIds.map((id) => tagNameMap[id] || ""),
+      score: Math.round(r.score * 100),
+      tags: r.topTagIds.map(
+        (id) => tagNameMap[id] || ""
+      ),
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 5);
 }
+
+// チューニングするならここ
+// commonCount < 2   // 厳しさ調整
+// score < 0.1       // 足切り
+// commonCount * 0.03 // 一致強化
+// + commonCount * 2 // 表示ブースト

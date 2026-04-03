@@ -4,18 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { buildUserVector } from "@/lib/api/recommend/buildUserVector";
+import { calculateScore } from "@/lib/api/recommend/calculateScore";
 
-type TagCount = {
-  tagId: string;
-  count: number;
-};
 
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ isbn: string }> }
 ): Promise<NextResponse> {
   try {
-    // ✅ await で unwrap
     const { isbn } = await context.params;
 
     const session = await getServerSession(authOptions);
@@ -25,84 +22,110 @@ export async function GET(
 
     const userId = session.user.id;
 
+    // ---------------------------------------------
+    // 本取得
+    // ---------------------------------------------
     const book = await prisma.book.findUnique({
       where: { isbn },
       select: { id: true }
     });
 
     if (!book) {
-      // return NextResponse.json({ error: "Bookが存在しません" }, { status: 404 });
-      
       return NextResponse.json(null);
     }
 
     const bookId = book.id;
 
-    // ユーザータグ集計（嗜好スコア反映）
-    const userRaw = await prisma.userTagScore.findMany({
-      where: { userId },
-      select: { tagId: true, score: true }
-    });
+    // ---------------------------------------------
+    // ユーザーベクトル（共通ロジック）
+    // ---------------------------------------------
+    const userTags = await buildUserVector(userId);
 
-    const userTotal = userRaw.reduce((sum, t) => sum + t.score, 0);
-
-    const userTags = userRaw.map(t => ({
-      tagId: t.tagId,
-      count: t.score // ここを score として扱う
-    }));
-
+    // ---------------------------------------------
     // 本タグ
+    // ---------------------------------------------
     const bookRaw = await prisma.userBookTag.groupBy({
       by: ["tagId"],
       where: { bookId },
       _count: { tagId: true },
     });
-    const bookTags = bookRaw.map(t => ({ tagId: t.tagId, count: t._count.tagId }));
-    const bookTotal = bookTags.reduce((sum, t) => sum + t.count, 0);
 
-    // タグ名
-    const tagIds = [...new Set([...userTags.map(t => t.tagId), ...bookTags.map(t => t.tagId)])];
-    const tags = await prisma.tag.findMany({ where: { id: { in: tagIds } } });
+    const bookTags = bookRaw.map(t => ({
+      tagId: t.tagId,
+      count: t._count.tagId
+    }));
+
+    // ---------------------------------------------
+    // タグ名取得
+    // ---------------------------------------------
+    const tagIds = [...new Set([
+      ...userTags.map(t => t.tagId),
+      ...bookTags.map(t => t.tagId)
+    ])];
+
+    const tags = await prisma.tag.findMany({
+      where: { id: { in: tagIds } }
+    });
+
     const tagMap = new Map(tags.map(t => [t.id, t.name]));
 
-    if (userTotal === 0 || bookTotal === 0) {
-      return NextResponse.json({
-        score: 0,
-        matchCount: 0,
-        matchedTags: [],
-        userTagStats: userTags.map(t => ({ tagId: t.tagId, tagName: tagMap.get(t.tagId) ?? "", count: t.count })),
-        bookTagStats: bookTags.map(t => ({ tagId: t.tagId, tagName: tagMap.get(t.tagId) ?? "", count: t.count })),
-      });
-    }
+    // ---------------------------------------------
+    // スコア計算（🔥統一）
+    // ---------------------------------------------
+    const result = calculateScore(userTags, bookTags);
 
-    // スコア計算
-    let score = 0;
+    const score = result ? Math.round(result.score * 100) : 0;
+    const matchCount = result?.matchCount ?? 0;
+
+    // ---------------------------------------------
+    // matchedTags（UI用）
+    // ---------------------------------------------
     const matchedTags = [];
+
     for (const u of userTags) {
       const b = bookTags.find(bt => bt.tagId === u.tagId);
+
       if (b) {
-        const userWeight = u.count / userTotal;
-        const bookWeight = b.count / bookTotal;
-        score += userWeight * bookWeight;
         matchedTags.push({
           tagId: u.tagId,
           tagName: tagMap.get(u.tagId) ?? "",
-          userCount: u.count,
+          userCount: u.score,
           bookCount: b.count,
-          userWeight,
-          bookWeight,
+          userWeight: u.score,
+          bookWeight: b.count,
         });
       }
     }
 
-    matchedTags.sort((a, b) => (b.userCount * b.bookCount) - (a.userCount * a.bookCount));
+    // 強い順
+    matchedTags.sort(
+      (a, b) => (b.userCount * b.bookCount) - (a.userCount * a.bookCount)
+    );
 
+    // ---------------------------------------------
+    // 統計
+    // ---------------------------------------------
+    const userTagStats = userTags.map(t => ({
+      tagId: t.tagId,
+      tagName: tagMap.get(t.tagId) ?? "",
+      count: t.score,
+    }));
+
+    const bookTagStats = bookTags.map(t => ({
+      tagId: t.tagId,
+      tagName: tagMap.get(t.tagId) ?? "",
+      count: t.count,
+    }));
+
+    // ---------------------------------------------
+    // レスポンス
+    // ---------------------------------------------
     return NextResponse.json({
-      score: Math.round(score * 100),
-      matchCount: matchedTags.length,
+      score,
+      matchCount,
       matchedTags,
-      userTagStats: userTags.map(t => ({ tagId: t.tagId, tagName: tagMap.get(t.tagId) ?? "", count: t.count })),
-      bookTagStats: bookTags.map(t => ({ tagId: t.tagId, tagName: tagMap.get(t.tagId) ?? "", count: t.count })),
+      userTagStats,
+      bookTagStats,
     });
 
   } catch (error) {

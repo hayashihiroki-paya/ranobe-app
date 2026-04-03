@@ -1,7 +1,7 @@
 // app/TopRecommendContent.tsx
 
-import { getRecommendBooks } from "@/lib/api/recommend";
 import BookCardGrid from "@/features/book/components/BookCardGrid";
+import { getRecommendBooks } from "@/lib/api/recommend/getRecommendBooks";
 import { BookDisplay } from "@/types/book";
 import Link from "next/link";
 

@@ -1,7 +1,7 @@
 // app/recommend/RecommendContent.tsx
 
 import BookCardGrid from "@/features/book/components/BookCardGrid";
-import { getRecommendBooks } from "@/lib/api/recommend";
+import { getRecommendBooks } from "@/lib/api/recommend/getRecommendBooks";
 import { BookDisplay } from "@/types/book";
 
 export default async function RecommendContent({

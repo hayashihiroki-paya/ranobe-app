@@ -1,7 +1,6 @@
-// features\book\components\BookDetailView.tsx
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import LikeButton from "@/features/like/components/LikeButton"
 import WishButton from "@/features/wish/components/WishButton"
 import { RakutenBook } from "@/types/book"
@@ -39,18 +38,15 @@ type RecommendDetail = {
 }
 
 // ---------------------------------------------
-// フェッチ関数（型安全）
+// フェッチ関数
 // ---------------------------------------------
 async function fetchRecommendDetail(isbn: string): Promise<RecommendDetail | null> {
-  const res = await fetch(`/api/books/${isbn}/recommend-detail`)
+  const res = await fetch(`/api/books/${isbn}/recommend-detail`, {
+    cache: "no-store", // 🔥 常に最新
+  })
 
-  if (res.status === 404) {
-    return null // ← これがポイント
-  }
-
-  if (!res.ok) {
-    throw new Error("レコメンド取得に失敗しました")
-  }
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error("レコメンド取得に失敗しました")
 
   return res.json()
 }
@@ -68,42 +64,46 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
   // API取得
   // ---------------------------------------------
   useEffect(() => {
-    let isMounted = true
+    let ignore = false
 
     async function load() {
-      try {
-        setLoading(true)
-        const data = await fetchRecommendDetail(book.isbn)
+      setLoading(true)
+      setError(null)
+      setRecommend(null) // 🔥 前の本のデータ残るバグ防止
 
-        if (isMounted) {
+      try {
+        const data = await fetchRecommendDetail(book.isbn)
+        if (!ignore) {
           setRecommend(data)
         }
       } catch (e) {
-        if (isMounted) {
+        if (!ignore) {
           setError(e instanceof Error ? e.message : "エラーが発生しました")
         }
       } finally {
-        if (isMounted) {
+        if (!ignore) {
           setLoading(false)
         }
       }
     }
 
-    load()
+    if (book?.isbn) {
+      load()
+    }
 
     return () => {
-      isMounted = false
+      ignore = true
     }
   }, [book.isbn])
 
   // ---------------------------------------------
-  // おすすめ理由テキスト生成
+  // おすすめ理由
   // ---------------------------------------------
-  const topTag = recommend?.matchedTags[0]
+  const topTag = recommend?.matchedTags?.[0]
 
   const recommendMessage =
     topTag
-      ? `あなたが好きな「${topTag.tagName}」要素がほかの読者に好まれています`
+      ? `あなたが好きな「${topTag.tagName}」要素が他の読者にも好まれています`
       : null
 
   return (
@@ -117,7 +117,7 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       </button>
 
       {/* タイトル */}
-      <div className="flex justify-between items-start border-b pb-3 animate-fade-in">
+      <div className="flex justify-between items-start border-b pb-3">
 
         <div>
           <h1 className="text-2xl font-bold">{book.title}</h1>
@@ -126,13 +126,15 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
 
         {/* 一致度 */}
         <div className="text-orange-500 font-semibold">
-          {loading ? "..." : `一致度 ${recommend?.score ?? 0}%`}
+          {loading
+            ? "..."
+            : `一致度 ${recommend?.score ?? 0}%`}
         </div>
 
       </div>
 
       {/* メイン */}
-      <div className="grid grid-cols-[180px_1fr] gap-6 py-6 animate-fade-in [animation-delay:0.05s]">
+      <div className="grid grid-cols-[180px_1fr] gap-6 py-6">
 
         <img
           src={book.largeImageUrl}
@@ -149,7 +151,7 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       </div>
 
       {/* あらすじ */}
-      <div className="border-t pt-4 animate-fade-in [animation-delay:0.1s]">
+      <div className="border-t pt-4">
 
         <p className={`text-sm text-gray-700 ${expanded ? "" : "line-clamp-4"}`}>
           {book.itemCaption}
@@ -165,37 +167,15 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       </div>
 
       {/* アクション */}
-      <div className="border-t mt-6 pt-4 animate-fade-in [animation-delay:0.15s]">
+      <div className="border-t mt-6 pt-4">
         <div className="flex gap-3">
 
-
           <WishButton book={book} />
-
-
           <LikeButton book={book} />
-
 
           <button
             onClick={onOpenTagModal}
-            className="
-              flex items-center justify-center gap-2
-
-              px-4 py-2
-              rounded-xl
-
-              bg-gradient-to-r from-pink-400 to-orange-300
-              text-white font-medium text-sm
-
-              shadow-md
-              transition-all duration-200
-
-              hover:shadow-lg
-              hover:-translate-y-0.5
-              hover:from-pink-500 hover:to-orange-400
-
-              active:translate-y-0
-              active:shadow-sm
-            "
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-400 to-orange-300 text-white text-sm shadow-md hover:shadow-lg"
           >
             📝 タグ編集
           </button>
@@ -204,20 +184,20 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       </div>
 
       {/* タブ */}
-      <div className="border-t mt-6 pt-4 animate-fade-in [animation-delay:0.2s]">
+      <div className="border-t mt-6 pt-4">
 
         <div className="flex gap-4 mb-4">
-          {(["recommend", "input", "trend"] as const).map(tab => (
+          {(["recommend", "trend"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1 rounded ${activeTab === tab
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200"
-                }`}
+              className={`px-3 py-1 rounded ${
+                activeTab === tab
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200"
+              }`}
             >
               {tab === "recommend" && "⭐ おすすめ理由"}
-              {tab === "input" && "✏ ココ好き入力"}
               {tab === "trend" && "📊 みんなの傾向"}
             </button>
           ))}
@@ -225,10 +205,7 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
 
         <div className="p-4 bg-gray-50 rounded text-sm">
 
-          {/* ローディング */}
           {loading && <p>読み込み中...</p>}
-
-          {/* エラー */}
           {error && <p className="text-red-500">{error}</p>}
 
           {/* おすすめ理由 */}
@@ -242,44 +219,33 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
               )}
 
               <div className="flex flex-wrap gap-2">
-
-                {recommend?.matchedTags
-                  .slice(0, 5)
-                  .map(tag => (
-                    <span
-                      key={tag.tagId}
-                      className="px-2 py-1 bg-blue-100 rounded text-xs"
-                    >
-                      {tag.tagName}
-                    </span>
-                  ))}
-
+                {recommend?.matchedTags?.slice(0, 5).map(tag => (
+                  <span
+                    key={tag.tagId}
+                    className="px-2 py-1 bg-blue-100 rounded text-xs"
+                  >
+                    {tag.tagName}
+                  </span>
+                ))}
               </div>
 
               {recommend?.matchCount === 0 && (
-                <p className="text-gray-500 text-xs">
+                <p className="text-gray-500 text-xs mt-2">
                   一致するタグがまだありません
                 </p>
               )}
             </div>
           )}
 
-          {/* 入力 */}
-          {activeTab === "input" && (
-            <div>ココ好き入力エリア（後で実装）</div>
-          )}
-
           {/* 傾向 */}
           {!loading && activeTab === "trend" && (
             <div>
-
               <p className="mb-2 font-semibold">
                 この作品で多いタグ
               </p>
 
               <div className="flex flex-wrap gap-2">
-
-                {recommend?.bookTagStats.map(tag => (
+                {recommend?.bookTagStats?.map(tag => (
                   <span
                     key={tag.tagId}
                     className="px-2 py-1 bg-gray-200 rounded text-xs"
@@ -287,9 +253,7 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
                     {tag.tagName}（{tag.count}）
                   </span>
                 ))}
-
               </div>
-
             </div>
           )}
 

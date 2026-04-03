@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { getRecommendBooks } from "@/lib/api/recommend";
 import BookCardGrid from "@/features/book/components/BookCardGrid";
+import { getRecommendBooks } from "@/lib/api/recommend/getRecommendBooks";
 
 export default async function RecommendSection() {
   const session = await getServerSession(authOptions);
