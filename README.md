@@ -1,36 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ラノベならべ
+<img width="1672" height="941" alt="メインビジュアル" src="https://github.com/user-attachments/assets/e9205384-a845-4ce9-a5f9-b87f4a9b6479" />
+ライトノベルと読者を、“好きな要素”でつなぎなおす推薦・コミュニティサービス。
 
-## Getting Started
+---
 
-First, run the development server:
+## サービス概要
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+作品を「ジャンル」ではなく「要素単位」で分析し、  
+ユーザーの好みに合った作品を高精度でレコメンドするサービスです。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+「読む前に、自分に合う作品かわかる体験」を目指して開発しました。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 背景・課題
 
-## Learn More
+自身が累計1000冊近くライトノベルを読んできたヘビーユーザーであり、  
+新しい作品との出会いに大きな課題を感じていました。
 
-To learn more about Next.js, take a look at the following resources:
+ライトノベルは、漫画・アニメと比較して作品情報が整理されておらず、
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- ジャンル検索
+- あらすじ確認
+- レビュー確認
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+などを繰り返しながら探す必要があります。
 
-## Deploy on Vercel
+しかし実際には、
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- 「読んでみるまで自分に合うかわからない」
+- 「好みの細かな要素で探しづらい」
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+という問題がありました。
+
+そこで、
+
+「ユーザーの好きな要素から作品を逆算して探せる仕組み」
+
+を作りたいと考え、本サービスを制作しました。
+
+---
+
+## 主な機能
+
+### 要素ベースの高精度レコメンド
+
+お気に入り作品や好きな要素を登録することで、  
+要素単位で類似性を分析し、ユーザーに合った作品を推薦します。
+
+### ユーザー間の嗜好マッチング
+
+嗜好一致度の高いユーザーを可視化し、  
+そのユーザーのお気に入り作品から新たな作品との出会いを提供します。
+
+---
+
+## レコメンドロジック
+
+単純なタグ入力数ベースの設計では、人気作品へ偏りやすい問題があるため、  
+「入力傾向の近さ」を重視した設計にしています。
+
+作品・ユーザー情報をベクトル化し、  
+ベクトル同士の角度から類似度を測定する「コサイン類似度」を採用しています。
+
+<img width="1536" height="1024" alt="コサイン類似度説明図" src="https://github.com/user-attachments/assets/bd6b3f12-05bc-44c5-9c62-4ddbc0d24d46" />
+
+---
+
+## 使用技術
+
+### フロントエンド
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+
+### バックエンド
+- Next.js App Router
+- Prisma
+
+### データベース
+- PostgreSQL（Neon）
+
+### 認証
+- NextAuth.js
+
+---
+
+## 工夫した点
+
+タグを細分化すると精度は向上しますが、  
+一方で入力コストが増加し、離脱につながる課題があります。
+
+そのため、
+
+- タグ入力UIの簡略化
+- 少ない入力でも推薦精度を維持できる設計
+
+を重視しました。
+
+具体的には、作品ごとに入力数の多いタグを「基礎タグ」として内部的に補完し、  
+お気に入り登録だけでも一定の推薦精度が出るよう設計しています。
+
+---
+
+## 今後の展望
+
+- マイ本棚ランキング機能
+- ランキングに応じた重みづけ調整
+- UI / UX改善
+- コミュニティ機能強化
+- 広告・アフィリエイトによる収益化
+- 出版支援機能との連携構想
+
+---

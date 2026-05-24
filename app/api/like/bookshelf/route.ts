@@ -1,5 +1,10 @@
 // app/api/like/bookshelf/route.ts
 
+// console.log("🔥 bookshelf API called")
+
+throw new Error("bookshelf API called")
+// 使われなくなったAPIと思われる（検索なし、コンソールログ出ない、エラー出ない）
+
 // ---------------------------------------------
 // Prisma
 // DBアクセス用（Likeテーブルなどを操作）

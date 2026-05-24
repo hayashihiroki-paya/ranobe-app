@@ -26,6 +26,7 @@ model Book {
   likes         Like[]
   wishes        Wish[]
   userBookTag   UserBookTag[]
+  likeRanks     LikeRank[]
 }
 
 model Like {
@@ -37,6 +38,19 @@ model Like {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
+}
+
+model LikeRank {
+  id     Int    @id @default(autoincrement())
+  userId String
+  bookId Int
+  rank   Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@unique([userId, rank])
 }
 
 model User {
@@ -53,6 +67,7 @@ model User {
   userTagScore      UserTagScore[]
   wishes            Wish[]
   userBookTag       UserBookTag[]
+  likeRanks         LikeRank[]
   onboardingDone    Boolean @default(false)
 }
 
