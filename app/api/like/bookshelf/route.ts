@@ -2,7 +2,6 @@
 
 // console.log("🔥 bookshelf API called")
 
-throw new Error("bookshelf API called")
 // 使われなくなったAPIと思われる（検索なし、コンソールログ出ない、エラー出ない）
 
 // ---------------------------------------------
