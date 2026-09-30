@@ -1,335 +1,84 @@
-// app/api/like/route.ts
-
-// =============================================
-// Prisma (DBアクセス)
-// =============================================
-import { prisma } from "@/lib/prisma"
-
-// =============================================
-// NextAuth (ログインユーザー取得)
-// =============================================
-
-// =============================================
-// Next.js APIレスポンス
-// =============================================
 import { NextResponse } from "next/server"
-
-// =============================================
-// 本の入力型
-// =============================================
 import { bookInputSchema } from "@/types/book"
-import { createOrFindBook } from "@/lib/book/createOrFindBook"
-import { getAuthenticatedUserId, unauthorizedResponse } from "@/lib/api/auth"
-
-
-
-/*
-================================================
-POST /api/like
-お気に入り登録
-================================================
-*/
+import {
+  getAuthenticatedUserId,
+  unauthorizedResponse,
+} from "@/lib/api/auth"
+import {
+  createUserLike,
+  deleteUserLikeByIsbn,
+  getUserLikeIsbns,
+} from "@/lib/api/likeServer"
 
 export async function POST(req: Request) {
-
-  // ---------------------------------------------
-  // セッション取得
-  // ---------------------------------------------
   const userId = await getAuthenticatedUserId()
-
-  // 未ログイン拒否
   if (!userId) return unauthorizedResponse()
 
   try {
-
-    // ---------------------------------------------
-    // リクエストボディ
-    // ---------------------------------------------
     const parsedBody = bookInputSchema.safeParse(await req.json())
-
-    // ---------------------------------------------
-    // 必須項目チェック
-    // ---------------------------------------------
     if (!parsedBody.success) {
-      return NextResponse.json({ message: "isbn / title / author 必須" }, { status: 400 })
+      return NextResponse.json(
+        { message: "isbn / title / author 必須" },
+        { status: 400 }
+      )
     }
-    const body = parsedBody.data
 
-    /*
-      ============================================
-      transaction開始
-      ============================================
-
-      Book作成
-      Like作成
-
-      をまとめて実行
-    */
-
-    const result = await prisma.$transaction(async (tx) => {
-
-      /*
-        ============================================
-        Bookテーブル確認
-        ============================================
-      */
-
-      const book = await createOrFindBook(tx, body)
-
-
-      /*
-        ============================================
-        Like登録
-        ============================================
-
-        schema.prisma
-
-        @@unique([userId, bookId])
-
-        により
-
-        同一ユーザー
-        同一本
-
-        は1回しかLikeできない
-      */
-
-      const like = await tx.like.upsert({
-
-        where: {
-
-          userId_bookId: {
-
-            userId,
-            bookId: book.id
-
-          }
-
-        },
-
-        /*
-          既にLikeしている場合
-
-          update空なので
-          何もしない
-        */
-        update: {},
-
-        /*
-          未登録なら新規Like
-        */
-        create: {
-
-          userId,
-          bookId: book.id
-
-        }
-
-      })
-
-
-      return like
-
-    })
-
-
-    /*
-      成功レスポンス
-
-      UI側では
-      DBデータ全部は不要なので
-
-      最小限だけ返す
-    */
+    const like = await createUserLike(userId, parsedBody.data)
 
     return NextResponse.json({
-
       success: true,
-      likeId: result.id
-
+      likeId: like.id,
     })
-
-
-  } catch (err: unknown) {
-
-    console.error("LIKE API ERROR", err)
+  } catch (error: unknown) {
+    console.error("LIKE API ERROR", error)
 
     return NextResponse.json(
       { message: "お気に入り登録に失敗しました" },
       { status: 500 }
     )
-
   }
-
 }
 
-
-
-/*
-================================================
-DELETE /api/like
-お気に入り解除
-================================================
-*/
-
 export async function DELETE(req: Request) {
-
-  // ---------------------------------------------
-  // セッション取得
-  // ---------------------------------------------
   const userId = await getAuthenticatedUserId()
-
   if (!userId) return unauthorizedResponse()
 
   try {
-
-    /*
-      URLクエリ取得
-
-      /api/like?isbn=XXXX
-    */
-
     const { searchParams } = new URL(req.url)
-
     const isbn = searchParams.get("isbn")
 
     if (!isbn) {
-
       return NextResponse.json(
         { message: "isbn 必須" },
         { status: 400 }
       )
-
     }
 
-    /*
-      本を検索
-    */
-
-    const book = await prisma.book.findUnique({
-
-      where: { isbn }
-
-    })
-
-    if (!book) {
-
-      return NextResponse.json({
-        success: true
-      })
-
-    }
-
-    /*
-      ============================================
-      Like削除
-      ============================================
-
-      @@unique([userId, bookId])
-
-      を使うので
-
-      deleteManyではなく
-      deleteが使える
-    */
-
-    await prisma.like.delete({
-
-      where: {
-
-        userId_bookId: {
-
-          userId,
-          bookId: book.id
-
-        }
-
-      }
-
-    })
-
-
-    return NextResponse.json({
-
-      success: true
-
-    })
-
-
-  } catch (err) {
-
-    console.error("UNLIKE API ERROR", err)
+    await deleteUserLikeByIsbn(userId, isbn)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("UNLIKE API ERROR", error)
 
     return NextResponse.json(
       { message: "お気に入り解除失敗" },
       { status: 500 }
     )
-
   }
-
 }
 
-
-
-/*
-================================================
-GET /api/like
-ログインユーザーのお気に入りISBN一覧取得
-================================================
-*/
-
 export async function GET() {
-
   try {
-
-    // ---------------------------------------------
-    // ログインユーザー取得
-    // ---------------------------------------------
     const userId = await getAuthenticatedUserId()
-
-    // 未ログイン
     if (!userId) return unauthorizedResponse()
 
-    // ---------------------------------------------
-    // Like取得
-    // ---------------------------------------------
-    const likes = await prisma.like.findMany({
-
-      // 自分のLikeのみ
-      where: {
-        userId
-      },
-
-      // BookのISBNのみ取得
-      include: {
-        book: {
-          select: {
-            isbn: true
-          }
-        }
-      }
-
-    })
-
-    // ---------------------------------------------
-    // ISBN配列に変換
-    // ---------------------------------------------
-    const isbns = likes.map((like) => like.book.isbn)
-
-    // ---------------------------------------------
-    // レスポンス
-    // ---------------------------------------------
+    const isbns = await getUserLikeIsbns(userId)
     return NextResponse.json(isbns)
-
-  } catch (err) {
-
-    console.error(err)
+  } catch (error) {
+    console.error(error)
 
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
     )
-
   }
-
 }
