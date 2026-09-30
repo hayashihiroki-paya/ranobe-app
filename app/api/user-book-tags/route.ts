@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthenticatedUserId } from "@/lib/api/auth";
+import { getAuthenticatedUserId, unauthorizedResponse } from "@/lib/api/auth";
 import { userBookTagsQuerySchema } from "@/types/userBookTag";
 
 export async function GET(req: Request) {
@@ -11,12 +11,7 @@ export async function GET(req: Request) {
 
     const userId = await getAuthenticatedUserId();
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: "ログインが必要です" },
-        { status: 401 }
-      );
-    }
+    if (!userId) return unauthorizedResponse();
 
     const { searchParams } = new URL(req.url);
     const parsedQuery = userBookTagsQuerySchema.safeParse({
