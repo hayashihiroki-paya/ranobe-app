@@ -40,8 +40,7 @@ export default function InfiniteBookList({
       observer.observe(current)
     }
     return () => {
-    return () => {
-    }
+      observer.disconnect()
     }
   }, [isbn, loadMore])
 
