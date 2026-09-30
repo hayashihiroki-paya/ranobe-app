@@ -2,33 +2,34 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { getAuthenticatedUserId } from "@/lib/api/auth";
+import { userBookTagsQuerySchema } from "@/types/userBookTag";
 
 export async function GET(req: Request) {
 
   try {
 
-    const session = await getServerSession(authOptions);
+    const userId = await getAuthenticatedUserId();
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json(
         { error: "ログインが必要です" },
         { status: 401 }
       );
     }
 
-    const userId = session.user.id;
-
     const { searchParams } = new URL(req.url);
-    const isbn = searchParams.get("isbn");
+    const parsedQuery = userBookTagsQuerySchema.safeParse({
+      isbn: searchParams.get("isbn"),
+    });
 
-    if (!isbn) {
+    if (!parsedQuery.success) {
       return NextResponse.json(
         { error: "isbn が必要です" },
         { status: 400 }
       );
     }
+    const { isbn } = parsedQuery.data;
 
     // --------------------------------------------
     // Book取得

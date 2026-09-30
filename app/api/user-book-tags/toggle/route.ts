@@ -2,13 +2,8 @@
 
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getServerSession } from "next-auth"
-import { authOptions } from "../../auth/[...nextauth]/route"
-
-type ToggleBody = {
-  isbn: string
-  tagId: string
-}
+import { getAuthenticatedUserId } from "@/lib/api/auth"
+import { toggleUserBookTagSchema } from "@/types/userBookTag"
 
 export async function POST(req: Request) {
 
@@ -17,29 +12,27 @@ export async function POST(req: Request) {
     // --------------------------------------------
     // 認証
     // --------------------------------------------
-    const session = await getServerSession(authOptions)
+    const userId = await getAuthenticatedUserId()
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json(
         { error: "ログインが必要です" },
         { status: 401 }
       )
     }
 
-    const userId = session.user.id
-
     // --------------------------------------------
     // body取得
     // --------------------------------------------
-    const body = (await req.json()) as ToggleBody
-    const { isbn, tagId } = body
+    const parsedBody = toggleUserBookTagSchema.safeParse(await req.json())
 
-    if (!isbn || !tagId) {
+    if (!parsedBody.success) {
       return NextResponse.json(
         { error: "isbn と tagId が必要です" },
         { status: 400 }
       )
     }
+    const { isbn, tagId } = parsedBody.data
 
     // --------------------------------------------
     // Book取得
@@ -110,7 +103,7 @@ export async function POST(req: Request) {
     await prisma.userTagScore.upsert({
       where: {
         userId_tagId: {
-          userId: session.user.id,
+          userId,
           tagId,
         },
       },
@@ -120,7 +113,7 @@ export async function POST(req: Request) {
         },
       },
       create: {
-        userId: session.user.id,
+        userId,
         tagId,
         score: 1,
       },
