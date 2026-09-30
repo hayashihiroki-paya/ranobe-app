@@ -1,6 +1,6 @@
 // features/library/components/LibrarySkeleton.tsx
 
-import BookCardSkeleton from "@/features/book/components/BookCardSkeleton";
+import BookCardSkeletonGrid from "@/features/book/components/BookCardSkeletonGrid";
 
 export default function LibrarySkeleton() {
   return (
@@ -12,20 +12,10 @@ export default function LibrarySkeleton() {
       </div>
 
       {/* グリッド */}
-      <div
-        className="
-          grid
-          gap-6
-          grid-cols-2
-          sm:grid-cols-3
-          md:grid-cols-4
-          lg:grid-cols-5
-        "
-      >
-        {Array.from({ length: 10 }).map((_, i) => (
-          <BookCardSkeleton key={i} />
-        ))}
-      </div>
+      <BookCardSkeletonGrid
+        count={10}
+        className="grid gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+      />
     </div>
   );
 }
