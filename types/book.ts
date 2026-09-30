@@ -49,3 +49,10 @@ export const bookInputSchema = z.object({
   largeImageUrl: z.string().optional(),
   comment: z.string().optional()
 })
+
+export const likeRankItemSchema = z.object({
+  bookId: z.number(),
+  rank: z.number(),
+})
+
+export const likeRankInputSchema = z.array(likeRankItemSchema)

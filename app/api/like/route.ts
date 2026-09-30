@@ -8,8 +8,6 @@ import { prisma } from "@/lib/prisma"
 // =============================================
 // NextAuth (ログインユーザー取得)
 // =============================================
-import { getServerSession } from "next-auth"
-import { authOptions } from "../auth/[...nextauth]/route"
 
 // =============================================
 // Next.js APIレスポンス
@@ -19,8 +17,9 @@ import { NextResponse } from "next/server"
 // =============================================
 // 本の入力型
 // =============================================
-import { BookInput } from "@/types/book"
+import { bookInputSchema } from "@/types/book"
 import { createOrFindBook } from "@/lib/book/createOrFindBook"
+import { getAuthenticatedUserId, unauthorizedResponse } from "@/lib/api/auth"
 
 
 
@@ -36,36 +35,25 @@ export async function POST(req: Request) {
   // ---------------------------------------------
   // セッション取得
   // ---------------------------------------------
-  const session = await getServerSession(authOptions)
+  const userId = await getAuthenticatedUserId()
 
   // 未ログイン拒否
-  if (!session?.user?.id) {
-
-    return NextResponse.json(
-      { message: "ログインが必要です" },
-      { status: 401 }
-    )
-
-  }
+  if (!userId) return unauthorizedResponse()
 
   try {
 
     // ---------------------------------------------
     // リクエストボディ
     // ---------------------------------------------
-    const body: BookInput = await req.json()
+    const parsedBody = bookInputSchema.safeParse(await req.json())
 
     // ---------------------------------------------
     // 必須項目チェック
     // ---------------------------------------------
-    if (!body.isbn || !body.title || !body.author) {
-
-      return NextResponse.json(
-        { message: "isbn / title / author 必須" },
-        { status: 400 }
-      )
-
+    if (!parsedBody.success) {
+      return NextResponse.json({ message: "isbn / title / author 必須" }, { status: 400 })
     }
+    const body = parsedBody.data
 
     /*
       ============================================
@@ -112,7 +100,7 @@ export async function POST(req: Request) {
 
           userId_bookId: {
 
-            userId: session.user.id,
+            userId,
             bookId: book.id
 
           }
@@ -132,7 +120,7 @@ export async function POST(req: Request) {
         */
         create: {
 
-          userId: session.user.id,
+          userId,
           bookId: book.id
 
         }
@@ -189,16 +177,9 @@ export async function DELETE(req: Request) {
   // ---------------------------------------------
   // セッション取得
   // ---------------------------------------------
-  const session = await getServerSession(authOptions)
+  const userId = await getAuthenticatedUserId()
 
-  if (!session?.user?.id) {
-
-    return NextResponse.json(
-      { message: "ログインが必要です" },
-      { status: 401 }
-    )
-
-  }
+  if (!userId) return unauthorizedResponse()
 
   try {
 
@@ -258,7 +239,7 @@ export async function DELETE(req: Request) {
 
         userId_bookId: {
 
-          userId: session.user.id,
+          userId,
           bookId: book.id
 
         }
@@ -304,17 +285,10 @@ export async function GET() {
     // ---------------------------------------------
     // ログインユーザー取得
     // ---------------------------------------------
-    const session = await getServerSession(authOptions)
+    const userId = await getAuthenticatedUserId()
 
     // 未ログイン
-    if (!session?.user?.id) {
-
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
-
-    }
+    if (!userId) return unauthorizedResponse()
 
     // ---------------------------------------------
     // Like取得
@@ -323,7 +297,7 @@ export async function GET() {
 
       // 自分のLikeのみ
       where: {
-        userId: session.user.id
+        userId
       },
 
       // BookのISBNのみ取得

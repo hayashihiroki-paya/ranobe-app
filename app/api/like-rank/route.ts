@@ -1,9 +1,9 @@
 // app\api\like-rank\route.ts
 
 import { prisma } from "@/lib/prisma"
-import { getServerSession } from "next-auth"
-import { authOptions } from "../auth/[...nextauth]/route"
 import { NextResponse } from "next/server"
+import { getAuthenticatedUserId, unauthorizedResponse } from "@/lib/api/auth"
+import { likeRankInputSchema } from "@/types/book"
 
 /*
 ================================================
@@ -17,45 +17,25 @@ export async function PATCH(req: Request) {
   // -----------------------------
   // 認証チェック
   // -----------------------------
-  const session = await getServerSession(authOptions)
+  const userId = await getAuthenticatedUserId()
 
-  if (!session?.user?.id) {
-    return NextResponse.json(
-      { message: "ログインが必要です" },
-      { status: 401 }
-    )
-  }
-
-  const userId = session.user.id
+  if (!userId) return unauthorizedResponse()
 
   try {
 
     // -----------------------------
     // リクエストボディ
     // -----------------------------
-    const body: { bookId: number; rank: number }[] = await req.json()
+    const parsedBody = likeRankInputSchema.safeParse(await req.json())
 
-    if (!Array.isArray(body)) {
+    if (!parsedBody.success) {
       return NextResponse.json(
         { message: "配列で送ってください" },
         { status: 400 }
       )
     }
 
-    // -----------------------------
-    // バリデーション
-    // -----------------------------
-    for (const item of body) {
-      if (
-        typeof item.bookId !== "number" ||
-        typeof item.rank !== "number"
-      ) {
-        return NextResponse.json(
-          { message: "bookId / rank は number 必須" },
-          { status: 400 }
-        )
-      }
-    }
+    const body = parsedBody.data
 
     /*
       ============================================

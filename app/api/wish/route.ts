@@ -10,8 +10,6 @@ import { prisma } from "@/lib/prisma"
 // NextAuth
 // ログインユーザー取得
 // =============================================
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
 // =============================================
 // Next.js Response
@@ -21,7 +19,7 @@ import { NextResponse } from "next/server"
 // =============================================
 // 型
 // =============================================
-import { BookInput } from "@/types/book"
+import { bookInputSchema } from "@/types/book"
 
 // =============================================
 // 共通処理
@@ -33,6 +31,7 @@ import { createOrFindBook } from "@/lib/book/createOrFindBook"
 // DB Book → RakutenBook 変換
 // =============================================
 import { mapBooksToRakutenBooks } from "@/lib/mappers/bookMapper"
+import { getAuthenticatedUserId, unauthorizedResponse } from "@/lib/api/auth"
 
 
 
@@ -47,35 +46,24 @@ export async function POST(req: Request) {
   // -------------------------------------------------
   // ログインセッション取得
   // -------------------------------------------------
-  const session = await getServerSession(authOptions)
+  const userId = await getAuthenticatedUserId()
 
-  if (!session?.user?.id) {
-
-    return NextResponse.json(
-      { message: "ログインが必要です" },
-      { status: 401 }
-    )
-
-  }
+  if (!userId) return unauthorizedResponse()
 
   try {
 
     // -------------------------------------------------
     // リクエストボディ取得
     // -------------------------------------------------
-    const body: BookInput = await req.json()
+    const parsedBody = bookInputSchema.safeParse(await req.json())
 
     // -------------------------------------------------
     // 必須チェック
     // -------------------------------------------------
-    if (!body.isbn || !body.title || !body.author) {
-
-      return NextResponse.json(
-        { message: "isbn / title / author 必須" },
-        { status: 400 }
-      )
-
+    if (!parsedBody.success) {
+      return NextResponse.json({ message: "isbn / title / author 必須" }, { status: 400 })
     }
+    const body = parsedBody.data
 
     /*
     ============================================
@@ -106,7 +94,7 @@ export async function POST(req: Request) {
 
         where: {
           userId_bookId: {
-            userId: session.user.id,
+            userId,
             bookId: book.id
           }
         },
@@ -114,7 +102,7 @@ export async function POST(req: Request) {
         update: {},
 
         create: {
-          userId: session.user.id,
+          userId,
           bookId: book.id
         }
 
@@ -158,16 +146,9 @@ export async function DELETE(req: Request) {
   // -------------------------------------------------
   // ログイン確認
   // -------------------------------------------------
-  const session = await getServerSession(authOptions)
+  const userId = await getAuthenticatedUserId()
 
-  if (!session?.user?.id) {
-
-    return NextResponse.json(
-      { message: "ログインが必要です" },
-      { status: 401 }
-    )
-
-  }
+  if (!userId) return unauthorizedResponse()
 
   try {
 
@@ -208,7 +189,7 @@ export async function DELETE(req: Request) {
       where: {
 
         userId_bookId: {
-          userId: session.user.id,
+          userId,
           bookId: book.id
         }
 
@@ -244,16 +225,9 @@ export async function GET() {
   // -------------------------------------------------
   // ログインセッション取得
   // -------------------------------------------------
-  const session = await getServerSession(authOptions)
+  const userId = await getAuthenticatedUserId()
 
-  if (!session?.user?.id) {
-
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    )
-
-  }
+  if (!userId) return unauthorizedResponse()
 
   try {
 
@@ -264,7 +238,7 @@ export async function GET() {
     const wishes = await prisma.wish.findMany({
 
       where: {
-        userId: session.user.id
+        userId
       },
 
       include: {
