@@ -10,6 +10,7 @@ import { authOptions } from "./api/auth/[...nextauth]/route"
 
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXTAUTH_URL ?? "http://localhost:3000"),
   title: "ラノベならべ",
   description: "細かい好みに合わせて新しいラノベを見つけ出す",
   openGraph: {
