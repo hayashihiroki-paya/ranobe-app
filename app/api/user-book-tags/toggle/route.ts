@@ -24,7 +24,8 @@ export async function POST(req: Request) {
     // --------------------------------------------
     // body取得
     // --------------------------------------------
-    const parsedBody = toggleUserBookTagSchema.safeParse(await req.json())
+    const body = await req.json().catch(() => null)
+    const parsedBody = toggleUserBookTagSchema.safeParse(body)
 
     if (!parsedBody.success) {
       return NextResponse.json(
