@@ -5,10 +5,6 @@ import "./globals.css"
 import LikeInitializer from "@/features/like/components/LikeInitializer"
 import TagModalRoot from "@/features/tag/components/TagModalRoot"
 import { Toaster } from "sonner"
-import { getServerSession } from "next-auth"
-import { authOptions } from "./api/auth/[...nextauth]/route"
-
-
 export const metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL ?? "http://localhost:3000"),
   title: "ラノベならべ",
@@ -28,7 +24,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession(authOptions);
   return (
     <html lang="ja">
       <body>

@@ -56,6 +56,7 @@ export default async function SearchPage({ searchParams }: Props) {
       </h1>
 
       <InfiniteBookList
+        key={`${keyword}:${isbn ?? ""}`}
         initialBooks={books}
         keyword={keyword}
         isbn={isbn}

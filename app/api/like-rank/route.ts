@@ -113,7 +113,7 @@ export async function PATCH(req: Request) {
       success: true
     })
 
-  } catch (err: any) {
+  } catch (err: unknown) {
 
     console.error("LIKE RANK PATCH ERROR", err)
 

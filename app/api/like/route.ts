@@ -162,7 +162,7 @@ export async function POST(req: Request) {
     })
 
 
-  } catch (err: any) {
+  } catch (err: unknown) {
 
     console.error("LIKE API ERROR", err)
 

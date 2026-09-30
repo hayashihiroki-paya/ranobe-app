@@ -19,6 +19,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import LikeButton from "@/features/like/components/LikeButton"
 import { useLikeStore } from "@/features/like/store/useLikeStore"
 import { RakutenBook } from "@/types/book"
@@ -62,11 +63,8 @@ type Props = {
 export default function BookCard({
 
   book,
-  variant = "search",
   matchRate,
-  likeCount,
-  recommendReason,
-  shelfDate
+  likeCount
 
 }: Props) {
 
@@ -177,11 +175,13 @@ export default function BookCard({
         =============================== */}
 
         {book.largeImageUrl && (
-          <div className="aspect-[3/4] w-full overflow-hidden">
-            <img
+          <div className="relative aspect-[3/4] w-full overflow-hidden">
+            <Image
               src={book.largeImageUrl}
               alt={book.title}
-              className="w-full h-full object-cover"
+              fill
+              sizes="(max-width: 768px) 160px, 220px"
+              className="object-cover"
             />
           </div>
         )}
