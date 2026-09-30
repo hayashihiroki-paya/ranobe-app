@@ -2,9 +2,20 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
+
+type LikeWithBook = {
+  id: number
+  book: {
+    isbn: string
+    title: string
+    author: string
+    largeImageUrl: string | null
+  }
+}
 
 type Props = {
-  likes: any[]
+  likes: LikeWithBook[]
 }
 
 export default function BookshelfTabs({ likes }: Props) {
@@ -61,11 +72,14 @@ export default function BookshelfTabs({ likes }: Props) {
 
               <div>
 
-                <img
-                  src={like.book.largeImageUrl}
-                  width={160}
-                  alt={like.book.title}
-                />
+                {like.book.largeImageUrl && (
+                  <Image
+                    src={like.book.largeImageUrl}
+                    width={160}
+                    height={240}
+                    alt={like.book.title}
+                  />
+                )}
 
                 <p>{like.book.title}</p>
 

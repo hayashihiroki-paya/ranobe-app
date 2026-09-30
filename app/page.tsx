@@ -1,7 +1,6 @@
 // app/page.tsx
 
 import SearchBar from "@/features/search/components/SearchBar";
-import Link from "next/link";
 import { Suspense } from "react";
 
 import { getServerSession } from "next-auth";
@@ -37,16 +36,6 @@ export default async function Home() {
         )}
       </section>
 
-      {/* 更新履歴など追加予定 */}
-      <section>
-        {/* <h2>📈 人気作品</h2>
-
-        <div className="flex gap-4">
-          <Link href="/search">
-            <div className="border p-4">仮カード</div>
-          </Link>
-        </div> */}
-      </section>
     </main>
   );
 }

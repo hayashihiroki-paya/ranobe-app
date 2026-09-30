@@ -28,7 +28,7 @@ export default function RecalculateButton() {
       setResult(
         `更新完了: ${data.updatedCount} / ${data.totalBooks}`
       )
-    } catch (e) {
+    } catch {
       setResult("エラーが発生しました")
     } finally {
       setLoading(false)

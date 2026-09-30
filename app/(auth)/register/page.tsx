@@ -66,7 +66,7 @@ export default function RegisterPage() {
         router.push("/onboarding")
       }
 
-    } catch (error) {
+    } catch {
       setLoading(false)
       toast.error("エラーが発生しました")
     }

@@ -19,7 +19,7 @@ export default function PostLoginPage() {
     }
 
     check()
-  }, [])
+  }, [router])
 
   return <p>リダイレクト中...</p>
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { BookDisplay } from "@/types/book"
 import BookCardGrid from "./BookCardGrid"
 import BookSkeletonGrid from "./BookSkeletonGrid"
@@ -26,16 +26,7 @@ export default function InfiniteBookList({
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
-  // 🔥 ① 検索ワード変更時にリセット
-  useEffect(() => {
-    setBooks(initialBooks)
-    setPage(2)
-
-    // ★ ISBNならページングしない
-    setHasMore(!isbn)
-  }, [initialBooks, keyword, isbn])
-
-  async function loadMore() {
+  const loadMore = useCallback(async () => {
     // ★ ISBN時は何もしない
     if (isbn) return
 
@@ -66,7 +57,7 @@ export default function InfiniteBookList({
     setPage(prev => prev + 1)
 
     setLoading(false)
-  }
+  }, [hasMore, isbn, keyword, loading, page])
 
   // 🔥 ② observer
   useEffect(() => {
@@ -92,7 +83,7 @@ export default function InfiniteBookList({
       if (current) observer.unobserve(current)
     }
 
-  }, [page, hasMore, keyword, isbn])
+  }, [isbn, loadMore])
 
   return (
     <>

@@ -64,7 +64,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(books)
 
-  } catch (err) {
+  } catch {
 
     return NextResponse.json(
       { error: "Rakuten API error" },

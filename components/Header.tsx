@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { signIn, signOut, useSession } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 

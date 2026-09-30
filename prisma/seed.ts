@@ -72,11 +72,6 @@ const bookTagCandidates = [
 // ユーティリティ
 // ===============================
 
-// ランダム選択
-function pickRandom<T>(arr: T[], n: number): T[] {
-  return [...arr].sort(() => 0.5 - Math.random()).slice(0, n)
-}
-
 // 重み付きランダム選択
 function weightedPick<T>(
   items: T[],
@@ -179,7 +174,7 @@ async function main() {
         (tag) => preference[tag] || 0.1
       )
 
-      let selectedTags = weightedPick(book.tags, weights, 3)
+      const selectedTags = weightedPick(book.tags, weights, 3)
 
       // ノイズ（20%で1つランダム置換）
       if (Math.random() < 0.2) {

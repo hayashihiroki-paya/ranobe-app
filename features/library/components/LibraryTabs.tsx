@@ -8,7 +8,6 @@
 import { useState } from "react"
 
 import { RakutenBook } from "@/types/book"
-import BookCard from "@/features/book/components/BookCard"
 import BookCardGrid from "@/features/book/components/BookCardGrid"
 
 type Props = {

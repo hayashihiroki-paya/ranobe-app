@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import LikeButton from "@/features/like/components/LikeButton"
 import WishButton from "@/features/wish/components/WishButton"
 import { RakutenBook } from "@/types/book"
@@ -136,11 +137,15 @@ export default function BookDetailView({ book, onOpenTagModal }: Props) {
       {/* メイン */}
       <div className="grid grid-cols-[180px_1fr] gap-6 py-6">
 
-        <img
-          src={book.largeImageUrl}
-          alt={book.title}
-          className="rounded-lg shadow"
-        />
+        {book.largeImageUrl && (
+          <Image
+            src={book.largeImageUrl}
+            alt={book.title}
+            width={180}
+            height={240}
+            className="rounded-lg shadow"
+          />
+        )}
 
         <div className="text-sm space-y-2">
           <p><b>作者</b> {book.author}</p>
