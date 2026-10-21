@@ -2,10 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { buildUserVector } from "@/lib/api/recommend/buildUserVector";
 import { calculateScore } from "@/lib/api/recommend/calculateScore";
+import { getAuthenticatedUserId, unauthorizedResponse } from "@/lib/api/auth";
 
 
 export async function GET(
@@ -15,12 +14,8 @@ export async function GET(
   try {
     const { isbn } = await context.params;
 
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = session.user.id;
+    const userId = await getAuthenticatedUserId();
+    if (!userId) return unauthorizedResponse();
 
     // ---------------------------------------------
     // 本取得

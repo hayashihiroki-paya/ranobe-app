@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react"
 import type { BookDisplay } from "@/types/book"
 import BookCardGrid from "./BookCardGrid"
-import BookSkeletonGrid from "./BookSkeletonGrid"
+import BookCardGridSkeleton from "./BookCardGridSkeleton"
 import { useInfiniteBookSearch } from "../hooks/useInfiniteBookSearch"
 
 type Props = {
@@ -48,7 +48,7 @@ export default function InfiniteBookList({
     <>
       <BookCardGrid books={books} />
 
-      {loading && <BookSkeletonGrid />}
+      {loading && <BookCardGridSkeleton />}
 
       {!isbn && hasMore && (
         <div ref={loadMoreRef} className="h-10" />

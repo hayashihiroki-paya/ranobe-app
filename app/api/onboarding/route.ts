@@ -1,43 +1,45 @@
 // app/api/onboarding/route.ts
 
-import { getServerSession } from "next-auth"
-import { authOptions } from "../auth/[...nextauth]/route"
+import { NextResponse } from "next/server"
+import { getAuthenticatedUserId, unauthorizedResponse } from "@/lib/api/auth"
 import { prisma } from "@/lib/prisma"
+import { onboardingSchema } from "@/types/userBookTag"
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions)
+  const userId = await getAuthenticatedUserId()
+  if (!userId) return unauthorizedResponse()
 
-  if (!session?.user?.id) {
-    return new Response("Unauthorized", { status: 401 })
-  }
+  try {
+    const parsedBody = onboardingSchema.safeParse(await req.json())
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: "タグが選択されていません" },
+        { status: 400 }
+      )
+    }
 
-  const body = await req.json()
-  console.log("body", body)
-  const tagIds: string[] = body.tagIds ?? []
+    await prisma.$transaction(async (tx) => {
+      await tx.userTagScore.createMany({
+        data: parsedBody.data.tagIds.map((tagId) => ({
+          userId,
+          tagId,
+          score: 5,
+        })),
+        skipDuplicates: true,
+      })
 
-  // 🔥 バリデーション（超重要）
-  if (tagIds.length === 0) {
-    return Response.json(
-      { error: "タグが選択されていません" },
-      { status: 400 }
+      await tx.user.update({
+        where: { id: userId },
+        data: { onboardingDone: true },
+      })
+    })
+
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error("ONBOARDING API ERROR", error)
+    return NextResponse.json(
+      { error: "オンボーディングの保存に失敗しました" },
+      { status: 500 }
     )
   }
-
-  await prisma.userTagScore.createMany({
-    data: tagIds.map((tagId) => ({
-      userId: session.user.id,
-      tagId,
-      score: 5,
-    })),
-    skipDuplicates: true,
-  })
-
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: {
-      onboardingDone: true,
-    },
-  })
-
-  return Response.json({ ok: true })
 }
