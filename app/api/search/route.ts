@@ -3,16 +3,17 @@ import { NextResponse } from "next/server"
 import { BookDisplay } from "@/types/book"
 import { RakutenBookResponse } from "@/types/rakuten"
 
-export async function GET(req: Request) {
+const RAKUTEN_BOOK_SEARCH_API =
+  "https://openapi.rakuten.co.jp/services/api/BooksBook/Search/20170404"
 
+export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
 
   const title = searchParams.get("title")
-  const isbn = searchParams.get("isbn") // ★追加
+  const isbn = searchParams.get("isbn")
   const booksGenreId = searchParams.get("booksGenreId")
   const page = searchParams.get("page") ?? "1"
 
-  // ★バリデーション変更
   if (!title && !isbn) {
     return NextResponse.json(
       { error: "title or isbn required" },
@@ -20,13 +21,19 @@ export async function GET(req: Request) {
     )
   }
 
-  const url = new URL(
-    "https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404"
-  )
+  const applicationId = process.env.RAKUTEN_APP_ID
+  const accessKey = process.env.RAKUTEN_ACCESS_KEY
 
-  url.searchParams.set("applicationId", process.env.RAKUTEN_APP_ID!)
+  if (!applicationId || !accessKey) {
+    return NextResponse.json(
+      { error: "Rakuten API is not configured" },
+      { status: 503 }
+    )
+  }
 
-  // ★ここが分岐ポイント
+  const url = new URL(RAKUTEN_BOOK_SEARCH_API)
+  url.searchParams.set("applicationId", applicationId)
+
   if (isbn) {
     url.searchParams.set("isbn", isbn)
   } else {
@@ -41,13 +48,43 @@ export async function GET(req: Request) {
   }
 
   url.searchParams.set("format", "json")
+  // Keep the legacy nested Items[].Item response used by RakutenBookResponse.
+  url.searchParams.set("formatVersion", "1")
 
   try {
+    const res = await fetch(url.toString(), {
+      headers: { accessKey },
+      cache: "no-store",
+    })
 
-    const res = await fetch(url.toString())
+    if (!res.ok) {
+      console.error("Rakuten Books API returned an unsuccessful response", {
+        status: res.status,
+      })
 
-    const data: RakutenBookResponse = await res.json()
+      return NextResponse.json(
+        { error: "Rakuten API error" },
+        { status: 502 }
+      )
+    }
 
+    const payload: unknown = await res.json()
+
+    if (
+      typeof payload !== "object" ||
+      payload === null ||
+      !("Items" in payload) ||
+      !Array.isArray(payload.Items)
+    ) {
+      console.error("Rakuten Books API returned an unexpected response")
+
+      return NextResponse.json(
+        { error: "Rakuten API error" },
+        { status: 502 }
+      )
+    }
+
+    const data = payload as RakutenBookResponse
     const books: BookDisplay[] = data.Items.map(({ Item }) => ({
       isbn: Item.isbn,
       title: Item.title,
@@ -59,16 +96,16 @@ export async function GET(req: Request) {
       seriesName: Item.seriesName,
       itemCaption: Item.itemCaption,
       largeImageUrl: Item.largeImageUrl,
-      comment: ""
+      comment: "",
     }))
 
     return NextResponse.json(books)
-
   } catch {
+    console.error("Rakuten Books API request failed")
 
     return NextResponse.json(
       { error: "Rakuten API error" },
-      { status: 500 }
+      { status: 502 }
     )
   }
 }
