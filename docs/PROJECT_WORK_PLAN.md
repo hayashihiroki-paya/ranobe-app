@@ -20,13 +20,14 @@
 - [x] READMEにローカル開発手順を追加（2026-11-17、Issue #17ブランチ）
 - [x] seedスクリプトごとの作用とDB前提を確認
 - [ ] Issue #12統合後に `RAKUTEN_ACCESS_KEY` を環境変数一覧へ反映
-- [ ] seedの安全な実行コマンドを決定し、文書化
+- [x] タグ・カテゴリ重み用の再実行可能なseedコマンドを追加・文書化
+- [ ] 開発用DBでseedコマンドを実行してデータを確認
 
 ## 作業項目
 
 ### 1. 外部サービスと環境変数
 
-`.env.local` に必要な値を設定する。秘密情報はこのドキュメントやGitに記録しない。
+`.env` に必要な値を設定する。秘密情報はこのドキュメントやGitに記録しない。
 
 - `DATABASE_URL`: PostgreSQL/Neonの接続文字列
 - `NEXTAUTH_URL`: ローカル開発では `http://localhost:3000`
@@ -48,9 +49,10 @@ Googleログインを使う場合は、Google OAuthクライアントにロー�
 
 - 開発用PostgreSQL/Neonの接続先を確認する。本番DBを誤って変更しない
 - `npx prisma migrate deploy` で既存マイグレーションを適用する
+- `npm run db:seed` でタグとCategoryWeightの初期データを投入する（upsertのため再実行可能）。実行前に接続先が開発DBであることを確認する
 - seedスクリプトの対象・前提・既存データへの影響を確認してから必要なものだけ実行する
 
-`package.json` にseed用コマンドはなく、現時点で標準の実行方法は未定。`scripts/seedTags.ts` はタグをkeyでupsertし、`scripts/seed.ts` はCategoryWeightをupsertする。`prisma/seed.ts` は30ユーザーとlike・UserBookTagを作成し、ID 1〜60の書籍と既存タグを前提とする。ユーザー作成は再実行を想定しておらず、実データや既存データのあるDBで実行しない。安全な実行方法を決めるまで、seedコマンドを追加・案内しない。
+`npm run db:seed` は既存のTypeScriptコンパイラで `scripts/seedTags.ts` と `scripts/seed.ts` を一時出力先へコンパイルし、タグとCategoryWeightをupsertする。再実行可能ですが、実行前に開発DBであることを確認してください。`prisma/seed.ts` は別のデモデータ生成用で、30ユーザーとlike・UserBookTagを作成し、ID 1〜60の書籍と既存タグを前提とします。標準seedには含めず、既存データや本番DBで実行しないでください。
 
 ### 4. 起動と動作確認
 
@@ -71,7 +73,7 @@ Googleログインを使う場合は、Google OAuthクライアントにロー�
 - READMEにNode.js要件、依存関係復元、環境設定、マイグレーション、起動、lint・単体テストの手順を追加。
 - seedスクリプトを確認。タグとCategoryWeightはupsert、`prisma/seed.ts` は30ユーザーと関連データを作成することを記録。
 - Issue #12は未統合のため、新しい楽天API認証情報の設定は移行ブランチ統合後に反映する。
-- seed用の安全な実行コマンドは未整備のため、DB前提と実行方法の決定を継続課題として残す。
+- `npm run db:seed` を追加し、タグとカテゴリ重みのseedだけを実行するよう設定。デモユーザー生成seedは標準コマンドから除外。
 
 
 ### 2026-11-07
