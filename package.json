@@ -10,7 +10,7 @@
     "test": "vitest run",
     "postinstall": "prisma generate",
     "db:seed": "prisma db seed",
-    "db:seed:compile": "tsc --target ES2020 --module CommonJS --moduleResolution Node --esModuleInterop --skipLibCheck --rootDir . --outDir .seed-build scripts/seedTags.ts scripts/seed.ts"
+    "db:seed:compile": "node scripts/runReferenceSeed.mjs --compile-only"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -43,6 +43,6 @@
     "vitest": "4.1.12"
   },
   "prisma": {
-    "seed": "npm run db:seed:compile && node .seed-build/scripts/seedTags.js && node .seed-build/scripts/seed.js"
+    "seed": "node scripts/runReferenceSeed.mjs"
   }
 }
