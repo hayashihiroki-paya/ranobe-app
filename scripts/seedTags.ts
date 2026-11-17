@@ -167,5 +167,8 @@ async function main() {
 }
 
 main()
-  .catch(console.error)
+  .catch((error) => {
+    console.error("タグのseedに失敗しました", error);
+    process.exitCode = 1;
+  })
   .finally(() => prisma.$disconnect());

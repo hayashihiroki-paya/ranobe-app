@@ -114,3 +114,57 @@
 - 出版支援機能との連携構想
 
 ---
+
+## ローカル開発環境
+
+### 前提
+
+- Node.js 20.9以上
+- npm
+
+### セットアップ
+
+~~~bash
+git clone https://github.com/hayashihiroki-paya/ranobe-app.git
+cd ranobe-app
+npm ci
+cp .env.example .env
+~~~
+
+PowerShellでは、環境ファイルのコピーに `Copy-Item .env.example .env` を使います。`npm ci` の完了時にPrisma Clientが生成されます。
+
+### 環境変数
+
+開発用の値を `.env` に設定します。実データを含む本番DBの接続先や秘密値は使わず、Gitへコミットしないでください。
+
+- `DATABASE_URL`: 開発用PostgreSQL/Neonの接続文字列
+- `NEXTAUTH_URL`: ローカルでは `http://localhost:3000`
+- `NEXTAUTH_SECRET`: ローカル用のランダムな秘密値
+- `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`: Googleログインを使う場合に設定
+- `RAKUTEN_APP_ID`: 楽天APIを使う場合に設定
+- `ADMIN_EMAIL`: 管理者向けAPIを使う場合に設定
+
+楽天APIは現在の `main` が旧接続方式のままです。Issue #12 の移行が統合された後は、移行後の `.env.example` に追加される `RAKUTEN_ACCESS_KEY` も設定してください。新認証方式での実接続確認はIssue #12で管理しています。
+
+### データベースと起動
+
+開発用DBであることを確認してからマイグレーションを適用し、アプリを起動します。
+
+~~~bash
+npx prisma migrate deploy
+npm run db:seed
+npm run dev
+~~~
+
+ブラウザーで `http://localhost:3000` を開きます。Googleログインを確認する場合は、Google OAuth側にもローカルのコールバックURLを登録してください。
+
+### チェック
+
+~~~bash
+npm run lint
+npm test
+~~~
+
+### 初期データ
+
+`npm run db:seed` はタグとカテゴリ重みの初期データをupsertする、再実行可能なコマンドです。開発用DBであることを確認してから実行してください。`prisma/seed.ts` は30件のデモユーザーと関連データを作成し、標準コマンドには含めていません。詳しい前提は [作業計画](docs/PROJECT_WORK_PLAN.md) を参照してください。
