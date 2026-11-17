@@ -18,7 +18,7 @@ export function useInfiniteBookSearch({
   const [books, setBooks] = useState(initialBooks)
   const [page, setPage] = useState(2)
   const [loading, setLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(!disabled)
+  const [hasMore, setHasMore] = useState(!disabled && initialBooks.length > 0)
   const [error, setError] = useState<string | null>(null)
   const requestInProgress = useRef(false)
 
@@ -44,8 +44,7 @@ export function useInfiniteBookSearch({
       setBooks((previousBooks) => [...previousBooks, ...newBooks])
       setPage((currentPage) => currentPage + 1)
     } catch {
-      setError("検索結果の取得に失敗しました")
-      setHasMore(false)
+      setError("書籍検索サービスに接続できませんでした")
     } finally {
       requestInProgress.current = false
       setLoading(false)
