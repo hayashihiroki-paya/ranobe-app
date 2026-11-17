@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import type { BookDisplay } from "@/types/book"
 import BookCardGrid from "./BookCardGrid"
 import BookCardGridSkeleton from "./BookCardGridSkeleton"
+import SearchApiError from "@/features/search/components/SearchApiError"
 import { useInfiniteBookSearch } from "../hooks/useInfiniteBookSearch"
 
 type Props = {
@@ -26,7 +27,7 @@ export default function InfiniteBookList({
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (isbn) return
+    if (isbn || error) return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -42,7 +43,7 @@ export default function InfiniteBookList({
     return () => {
       observer.disconnect()
     }
-  }, [isbn, loadMore])
+  }, [error, isbn, loadMore])
 
   return (
     <>
@@ -50,17 +51,19 @@ export default function InfiniteBookList({
 
       {loading && <BookCardGridSkeleton />}
 
-      {!isbn && hasMore && (
-        <div ref={loadMoreRef} className="h-10" />
-      )}
-
-      {error && (
-        <p role="alert" className="text-center text-red-600 mt-10">
-          {error}
+      {books.length === 0 && !loading && !error && (
+        <p className="mt-10 text-center text-gray-500">
+          検索条件に一致する書籍が見つかりませんでした。
         </p>
       )}
 
-      {!hasMore && !isbn && !error && (
+      {!isbn && hasMore && !error && (
+        <div ref={loadMoreRef} className="h-10" />
+      )}
+
+      {error && <SearchApiError onRetry={loadMore} retrying={loading} />}
+
+      {!hasMore && books.length > 0 && !isbn && !error && (
         <p className="text-center text-gray-400 mt-10">
           これ以上の検索結果はありません
         </p>
