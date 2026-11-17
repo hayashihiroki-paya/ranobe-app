@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:seed": "prisma db seed",
+    "db:seed:compile": "tsc --target ES2020 --module CommonJS --moduleResolution Node --esModuleInterop --skipLibCheck --rootDir . --outDir .seed-build scripts/seedTags.ts scripts/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -39,5 +41,8 @@
     "typescript": "^5",
     "vite": "6.4.5",
     "vitest": "4.1.12"
+  },
+  "prisma": {
+    "seed": "npm run db:seed:compile && node .seed-build/scripts/seedTags.js && node .seed-build/scripts/seed.js"
   }
 }
