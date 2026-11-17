@@ -9,7 +9,6 @@ import {
 
 const {
   prismaMock,
-  transactionMock,
   transactionClientMock,
   getAuthenticatedUserIdMock,
   unauthorizedResponseMock,
