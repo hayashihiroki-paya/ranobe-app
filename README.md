@@ -128,14 +128,14 @@
 git clone https://github.com/hayashihiroki-paya/ranobe-app.git
 cd ranobe-app
 npm ci
-cp .env.example .env.local
+cp .env.example .env
 ~~~
 
-PowerShellでは、環境ファイルのコピーに `Copy-Item .env.example .env.local` を使います。`npm ci` の完了時にPrisma Clientが生成されます。
+PowerShellでは、環境ファイルのコピーに `Copy-Item .env.example .env` を使います。`npm ci` の完了時にPrisma Clientが生成されます。
 
 ### 環境変数
 
-開発用の値を `.env.local` に設定します。実データを含む本番DBの接続先や秘密値は使わず、Gitへコミットしないでください。
+開発用の値を `.env` に設定します。実データを含む本番DBの接続先や秘密値は使わず、Gitへコミットしないでください。
 
 - `DATABASE_URL`: 開発用PostgreSQL/Neonの接続文字列
 - `NEXTAUTH_URL`: ローカルでは `http://localhost:3000`
@@ -152,6 +152,7 @@ PowerShellでは、環境ファイルのコピーに `Copy-Item .env.example .en
 
 ~~~bash
 npx prisma migrate deploy
+npm run db:seed
 npm run dev
 ~~~
 
@@ -166,4 +167,4 @@ npm test
 
 ### 初期データ
 
-`package.json` に標準のseedコマンドはありません。seedスクリプトは用途とDB前提が異なり、特に `prisma/seed.ts` は30件のユーザーと関連データを作成します。実行方法と安全条件を確認せずに、本番DBや既存データのあるDBで実行しないでください。詳しくは [作業計画](docs/PROJECT_WORK_PLAN.md) を参照してください。
+`npm run db:seed` はタグとカテゴリ重みの初期データをupsertする、再実行可能なコマンドです。開発用DBであることを確認してから実行してください。`prisma/seed.ts` は30件のデモユーザーと関連データを作成し、標準コマンドには含めていません。詳しい前提は [作業計画](docs/PROJECT_WORK_PLAN.md) を参照してください。
