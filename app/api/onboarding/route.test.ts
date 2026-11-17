@@ -15,7 +15,7 @@ const {
   unauthorizedResponseMock,
 } = vi.hoisted(() => ({
   prismaMock: { $transaction: vi.fn() },
-  transactionMock: {
+  transactionClientMock: {
     userTagScore: { createMany: vi.fn() },
     user: { update: vi.fn() },
   },
