@@ -1,7 +1,7 @@
 # 作業計画・進捗
 
-最終更新: 2026-11-07
-作業ブランチ: `develop`
+最終更新: 2026-11-17
+作業ブランチ: `17-local-setup-docs`
 
 ## 目的
 
@@ -17,6 +17,10 @@
 - [ ] 必要な初期データを確認して投入
 - [ ] ローカルで起動し、主要機能を動作確認
 - [ ] lintとテストを実行し、結果を記録
+- [x] READMEにローカル開発手順を追加（2026-11-17、Issue #17ブランチ）
+- [x] seedスクリプトごとの作用とDB前提を確認
+- [ ] Issue #12統合後に `RAKUTEN_ACCESS_KEY` を環境変数一覧へ反映
+- [ ] seedの安全な実行コマンドを決定し、文書化
 
 ## 作業項目
 
@@ -29,9 +33,10 @@
 - `NEXTAUTH_SECRET`: NextAuth用のランダムなsecret
 - `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`: Googleログインを利用する場合のOAuth資格情報
 - `RAKUTEN_APP_ID`: 楽天ウェブサービスのアプリID。再発行・有効性を確認する
+- `RAKUTEN_ACCESS_KEY`: Issue #12の新認証方式を取り込んだ後に追加・設定する（現行mainの `.env.example` には未掲載）
 - `ADMIN_EMAIL`: 管理者向けタグ再計算APIを利用する場合の管理者メールアドレス
 
-Googleログインを使う場合は、Google OAuthクライアントにローカルのNextAuthコールバックURLを登録する。楽天アプリIDについては、設定後にBooksBook Search APIの応答を確認する。エラー時はキー失効と決めつけず、HTTPステータスとAPIエラー本文も確認する。
+Googleログインを使う場合は、Google OAuthクライアントにローカルのNextAuthコールバックURLを登録する。現行mainの楽天検索は旧接続方式のままで、新ドメイン・新認証方式への移行と実API確認はIssue #12で管理する。移行後の認証情報と設定項目は、Issue #12の変更を取り込んでからこの手順と `.env.example` に反映する。
 
 ### 2. ローカル依存関係
 
@@ -45,7 +50,7 @@ Googleログインを使う場合は、Google OAuthクライアントにロー�
 - `npx prisma migrate deploy` で既存マイグレーションを適用する
 - seedスクリプトの対象・前提・既存データへの影響を確認してから必要なものだけ実行する
 
-`package.json` にseed用スクリプトは定義されていない。`scripts/seedTags.ts`、`scripts/seed.ts`、`prisma/seed.ts` は役割と実行方法を個別に確認する。特に `prisma/seed.ts` は書籍やユーザー等のデータを作成するため、空の開発DBであることを確認せず実行しない。
+`package.json` にseed用コマンドはなく、現時点で標準の実行方法は未定。`scripts/seedTags.ts` はタグをkeyでupsertし、`scripts/seed.ts` はCategoryWeightをupsertする。`prisma/seed.ts` は30ユーザーとlike・UserBookTagを作成し、ID 1〜60の書籍と既存タグを前提とする。ユーザー作成は再実行を想定しておらず、実データや既存データのあるDBで実行しない。安全な実行方法を決めるまで、seedコマンドを追加・案内しない。
 
 ### 4. 起動と動作確認
 
@@ -59,6 +64,15 @@ Googleログインを使う場合は、Google OAuthクライアントにロー�
 作業を進めたら、このファイルのチェック項目と「現状」を更新する。問題が出た場合は、再現手順・エラー概要・次の対応を追記する。秘密情報や接続文字列は記録しない。
 
 ## 作業ログ
+
+### 2026-11-17
+
+- Issue #17に紐づく `17-local-setup-docs` を `main` から作成。
+- READMEにNode.js要件、依存関係復元、環境設定、マイグレーション、起動、lint・単体テストの手順を追加。
+- seedスクリプトを確認。タグとCategoryWeightはupsert、`prisma/seed.ts` は30ユーザーと関連データを作成することを記録。
+- Issue #12は未統合のため、新しい楽天API認証情報の設定は移行ブランチ統合後に反映する。
+- seed用の安全な実行コマンドは未整備のため、DB前提と実行方法の決定を継続課題として残す。
+
 
 ### 2026-11-07
 
