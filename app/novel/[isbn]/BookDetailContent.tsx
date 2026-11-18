@@ -23,8 +23,13 @@ async function getBook(isbn: string): Promise<RakutenBook | null> {
     throw new Error("Rakuten API request failed")
   }
 
-  const data: { Items?: unknown } | null = await res.json()
-  if (!Array.isArray(data?.Items)) {
+  const data: unknown = await res.json()
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    !("Items" in data) ||
+    !Array.isArray(data.Items)
+  ) {
     throw new Error("Rakuten API returned an invalid response")
   }
 
