@@ -12,3 +12,12 @@ export const toggleUserBookTagSchema = z.object({
 export const onboardingSchema = z.object({
   tagIds: z.array(z.string().min(1)).min(1),
 })
+
+export const onboardingSkipSchema = z.object({
+  skip: z.literal(true),
+})
+
+export const onboardingRequestSchema = z.union([
+  onboardingSchema,
+  onboardingSkipSchema,
+])

@@ -93,6 +93,19 @@ describe("POST /api/onboarding", () => {
     });
   });
 
+  it("marks onboarding complete when skipped without creating tag scores", async () => {
+    const response = await POST(request({ skip: true }));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ ok: true });
+    expect(prismaMock.$transaction).toHaveBeenCalledOnce();
+    expect(transactionClientMock.userTagScore.createMany).not.toHaveBeenCalled();
+    expect(transactionClientMock.user.update).toHaveBeenCalledWith({
+      where: { id: "reader-1" },
+      data: { onboardingDone: true },
+    });
+  });
+
   it("returns a server error when the transaction fails", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     prismaMock.$transaction.mockRejectedValue(new Error("database unavailable"));
