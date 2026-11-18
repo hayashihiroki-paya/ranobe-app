@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
+import { useAccessibleDialog } from "@/lib/hooks/useAccessibleDialog"
 
 // 👇 既存のタグ入力コンポーネント（使ってるやつに置き換え）
 import TagSelector from "@/features/tag/components/TagSelector"
@@ -17,6 +18,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const { update } = useSession()
   const MIN_TAGS = 3
+  const dialogRef = useAccessibleDialog({ isOpen: true })
 
   const saveOnboarding = async (payload: OnboardingPayload) => {
     setLoading(true)
@@ -75,13 +77,27 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-xl w-[520px] max-h-[80vh] shadow-lg">
-        <h1 className="text-xl font-bold mb-2">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-3 sm:p-6">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="onboarding-title"
+        aria-describedby="onboarding-description"
+        aria-busy={loading}
+        tabIndex={-1}
+        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-xl bg-white p-4 shadow-lg sm:max-h-[calc(100dvh-3rem)] sm:p-6"
+      >
+        <h1
+          id="onboarding-title"
+          data-dialog-initial-focus
+          tabIndex={-1}
+          className="mb-2 text-xl font-bold"
+        >
           好きな作品のタグを選んでください
         </h1>
 
-        <p className="text-sm text-gray-500 mb-4">
+        <p id="onboarding-description" className="mb-4 text-sm text-gray-500">
           あなたに合ったおすすめを表示します
         </p>
 
@@ -91,6 +107,7 @@ export default function OnboardingPage() {
         />
 
         <button
+          type="button"
           onClick={handleComplete}
           disabled={loading}
           className={`
@@ -102,6 +119,7 @@ export default function OnboardingPage() {
         </button>
 
         <button
+          type="button"
           onClick={handleSkip}
           disabled={loading}
           className="w-full mt-3 text-sm text-gray-500 hover:underline disabled:opacity-50"
