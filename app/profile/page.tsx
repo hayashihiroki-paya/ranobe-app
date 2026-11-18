@@ -9,6 +9,7 @@ import SimilarUsers from "@/features/profile/components/SimilarUsers"
 import TagStats from "@/features/profile/components/TagStats"
 import UserInfo from "@/features/profile/components/UserInfo"
 import UserStatsCards from "@/features/profile/components/UserStatsCards"
+import AccountDeletion from "@/features/profile/components/AccountDeletion"
 import { authOptions } from "../api/auth/[...nextauth]/route"
 
 export default async function ProfilePage() {
@@ -45,6 +46,8 @@ export default async function ProfilePage() {
             </Suspense>
           </div>
         </div>
+
+        <AccountDeletion />
       </div>
     </div>
   )
