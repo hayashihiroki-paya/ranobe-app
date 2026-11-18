@@ -86,7 +86,7 @@ export async function likeBook(book: RakutenBook) {
 
 export async function unlikeBook(isbn: string) {
 
-  const res = await fetch(`/api/like?isbn=${isbn}`, {
+  const res = await fetch(`/api/like?isbn=${encodeURIComponent(isbn)}`, {
 
     method: "DELETE"
 

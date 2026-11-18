@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { RakutenBook } from "@/types/book"
 import { unwishBook, wishBook } from "../api/wish"
 import { useWishStore } from "../store/useWishStore"
+import { toast } from "sonner"
 
 type Props = {
   book: RakutenBook
@@ -18,42 +19,35 @@ export default function WishButton({ book }: Props) {
   const wished = isWished(book.isbn)
 
   const [loading, setLoading] = useState(false)
+  const inFlight = useRef(false)
 
   const handleClick = async () => {
-
-    if (loading) return
-
+    if (inFlight.current) return
+    inFlight.current = true
     setLoading(true)
 
     try {
-
       if (wished) {
-
-        unwish(book.isbn)
         await unwishBook(book.isbn)
-
+        unwish(book.isbn)
       } else {
-
-        wish(book.isbn)
         await wishBook(book)
-
+        wish(book.isbn)
       }
-
-    } catch (err) {
-
-      console.error(err)
-      alert("ウィッシュ更新に失敗しました")
-
+    } catch {
+      toast.error(
+        "ウィッシュを更新できませんでした。時間をおいて、もう一度お試しください。",
+      )
     } finally {
-
+      inFlight.current = false
       setLoading(false)
-
     }
   }
 
   return (
 
     <button
+      type="button"
       onClick={(e) => {
         e.preventDefault()
         e.stopPropagation()

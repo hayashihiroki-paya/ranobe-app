@@ -22,7 +22,7 @@ export async function wishBook(book: RakutenBook) {
 
 export async function unwishBook(isbn: string) {
 
-  const res = await fetch(`/api/wish/${isbn}`, {
+  const res = await fetch(`/api/wish?isbn=${encodeURIComponent(isbn)}`, {
 
     method: "DELETE"
 
