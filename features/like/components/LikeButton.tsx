@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { likeBook, unlikeBook } from "@/lib/api/like"
 import { useLikeStore } from "@/features/like/store/useLikeStore"
 import { RakutenBook } from "@/types/book"
 import { useTagModalStore } from "@/features/tag/store/useTagModalStore"
+import { toast } from "sonner"
 
 type Props = {
   book: RakutenBook
@@ -16,31 +17,41 @@ export default function LikeButton({ book }: Props) {
   const unlike = useLikeStore((s) => s.unlike)
   const liked = isLiked(book.isbn)
   const [loading, setLoading] = useState(false)
+  const inFlight = useRef(false)
   const openTagModal = useTagModalStore((s) => s.open)
 
   const handleClick = async () => {
-    if (loading) return
+    if (inFlight.current) return
+    inFlight.current = true
     setLoading(true)
+
+    let shouldOpenTagModal = false
+
     try {
       if (liked) {
-        unlike(book.isbn)
         await unlikeBook(book.isbn)
+        unlike(book.isbn)
       } else {
-        like(book.isbn)
         await likeBook(book)
-        openTagModal(book.isbn)
+        like(book.isbn)
+        shouldOpenTagModal = true
       }
-    } catch (err) {
-      console.error(err)
-      alert("お気に入り更新に失敗しました")
+    } catch {
+      toast.error(
+        "お気に入りを更新できませんでした。時間をおいて、もう一度お試しください。",
+      )
     } finally {
+      inFlight.current = false
       setLoading(false)
     }
+
+    if (shouldOpenTagModal) openTagModal(book.isbn)
   }
 
   return (
     <>
       <button
+        type="button"
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
