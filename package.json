@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "benchmark:recommendation": "node --expose-gc scripts/benchmarkRecommendation.mjs",
     "postinstall": "prisma generate",
     "db:seed": "prisma db seed",
     "db:seed:compile": "node scripts/runReferenceSeed.mjs --compile-only"
