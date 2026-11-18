@@ -1,152 +1,163 @@
 "use client"
 
+import { useState } from "react"
 import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { signIn, getSession } from "next-auth/react"
-import { useState } from "react"
 import Link from "next/link"
 import { toast } from "sonner"
-
-type RegisterFormData = {
-  name: string
-  email: string
-  password: string
-}
+import AuthFormError from "@/features/auth/components/AuthFormError"
+import {
+  registrationFormSchema,
+  type RegistrationFormValues,
+} from "@/features/schemas"
 
 export default function RegisterPage() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormData>()
+  } = useForm<RegistrationFormValues>({
+    resolver: zodResolver(registrationFormSchema),
+  })
 
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: RegistrationFormValues) => {
     setLoading(true)
+    let accountCreated = false
 
     try {
-      const res = await fetch("/api/register", {
+      const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
 
-      if (!res.ok) {
-        toast.error("登録に失敗しました")
-        setLoading(false)
+      const body: unknown = await response.json().catch(() => null)
+      if (!response.ok) {
+        const message =
+          typeof body === "object" &&
+          body !== null &&
+          "error" in body &&
+          typeof body.error === "string"
+            ? body.error
+            : "登録に失敗しました"
+        toast.error(message)
         return
       }
 
-      toast.success("登録完了！ログイン中...")
-
-      const loginRes = await signIn("credentials", {
+      accountCreated = true
+      const loginResult = await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
       })
 
-      if (loginRes?.error) {
-        setLoading(false)
-        toast.error("ログインに失敗しました")
+      if (!loginResult?.ok || loginResult.error) {
+        toast.error("登録は完了しましたが、自動ログインできませんでした。ログインしてください")
+        router.push("/login")
         return
       }
 
-      // 🔥 ここ追加（超重要）
       const session = await getSession()
-
-      setLoading(false)
-
-      toast.success("ようこそ！")
-
-      if (session?.user?.onboardingDone) {
-        router.push("/")
-      } else {
-        router.push("/onboarding")
+      if (!session?.user) {
+        toast.error("登録は完了しましたが、ログイン状態を確認できませんでした。ログインしてください")
+        router.push("/login")
+        return
       }
 
+      toast.success("アカウントを登録しました")
+      router.push(session.user.onboardingDone ? "/" : "/onboarding")
     } catch {
+      if (accountCreated) {
+        toast.error("登録は完了しましたが、自動ログインできませんでした。ログインしてください")
+        router.push("/login")
+      } else {
+        toast.error("登録に失敗しました。時間をおいて再試行してください")
+      }
+    } finally {
       setLoading(false)
-      toast.error("エラーが発生しました")
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow">
+        <h1 className="mb-6 text-center text-2xl font-bold">新規登録</h1>
 
-        <h1 className="text-2xl font-bold text-center mb-6">
-          新規登録
-        </h1>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+          aria-busy={loading}
+        >
           <div>
+            <label htmlFor="register-name" className="mb-1 block text-sm font-medium">
+              名前
+            </label>
             <input
-              {...register("name", { required: "名前は必須です" })}
-              placeholder="名前"
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              id="register-name"
+              {...register("name")}
+              type="text"
+              autoComplete="name"
+              required
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? "register-name-error" : undefined}
+              className="w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-            {errors.name && (
-              <p className="text-sm text-red-500 mt-1">
-                {errors.name.message}
-              </p>
-            )}
+            <AuthFormError id="register-name-error" message={errors.name?.message} />
           </div>
 
           <div>
+            <label htmlFor="register-email" className="mb-1 block text-sm font-medium">
+              メールアドレス
+            </label>
             <input
-              {...register("email", {
-                required: "メールは必須です",
-                pattern: {
-                  value: /^\S+@\S+$/i,
-                  message: "メール形式が正しくありません",
-                },
-              })}
-              placeholder="メールアドレス"
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              id="register-email"
+              {...register("email")}
+              type="email"
+              autoComplete="email"
+              required
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? "register-email-error" : undefined}
+              className="w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-            {errors.email && (
-              <p className="text-sm text-red-500 mt-1">
-                {errors.email.message}
-              </p>
-            )}
+            <AuthFormError id="register-email-error" message={errors.email?.message} />
           </div>
 
           <div>
+            <label htmlFor="register-password" className="mb-1 block text-sm font-medium">
+              パスワード
+            </label>
             <input
-              {...register("password", {
-                required: "パスワードは必須です",
-                minLength: {
-                  value: 6,
-                  message: "6文字以上で入力してください",
-                },
-              })}
+              id="register-password"
+              {...register("password")}
               type="password"
-              placeholder="パスワード"
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              autoComplete="new-password"
+              required
+              minLength={6}
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={errors.password ? "register-password-error" : undefined}
+              className="w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-            {errors.password && (
-              <p className="text-sm text-red-500 mt-1">
-                {errors.password.message}
-              </p>
-            )}
+            <AuthFormError id="register-password-error" message={errors.password?.message} />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className={`
-              w-full py-2 rounded-lg text-white transition
-              ${loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"}
-            `}
+            className={`w-full rounded-lg py-2 text-white transition disabled:opacity-50 ${
+              loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+            }`}
           >
             {loading ? "登録中..." : "登録する"}
           </button>
         </form>
 
-        <p className="text-sm text-center mt-6">
+        <p className="mt-6 text-center text-sm">
           すでにアカウントをお持ちの方は{" "}
           <Link href="/login" className="text-blue-500 hover:underline">
             ログイン
