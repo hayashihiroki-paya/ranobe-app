@@ -3,14 +3,14 @@
 import { NextResponse } from "next/server"
 import { getAuthenticatedUserId, unauthorizedResponse } from "@/lib/api/auth"
 import { prisma } from "@/lib/prisma"
-import { onboardingSchema } from "@/types/userBookTag"
+import { onboardingRequestSchema } from "@/types/userBookTag"
 
 export async function POST(req: Request) {
   const userId = await getAuthenticatedUserId()
   if (!userId) return unauthorizedResponse()
 
   try {
-    const parsedBody = onboardingSchema.safeParse(await req.json())
+    const parsedBody = onboardingRequestSchema.safeParse(await req.json())
     if (!parsedBody.success) {
       return NextResponse.json(
         { error: "タグが選択されていません" },
@@ -18,15 +18,19 @@ export async function POST(req: Request) {
       )
     }
 
+    const tagIds = "tagIds" in parsedBody.data ? parsedBody.data.tagIds : []
+
     await prisma.$transaction(async (tx) => {
-      await tx.userTagScore.createMany({
-        data: parsedBody.data.tagIds.map((tagId) => ({
-          userId,
-          tagId,
-          score: 5,
-        })),
-        skipDuplicates: true,
-      })
+      if (tagIds.length > 0) {
+        await tx.userTagScore.createMany({
+          data: tagIds.map((tagId) => ({
+            userId,
+            tagId,
+            score: 5,
+          })),
+          skipDuplicates: true,
+        })
+      }
 
       await tx.user.update({
         where: { id: userId },

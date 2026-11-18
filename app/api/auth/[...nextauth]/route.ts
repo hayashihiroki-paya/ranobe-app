@@ -54,11 +54,23 @@ export const authOptions = {
 
   callbacks: {
     // 🔥 JWTに保存
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       // 初回ログイン時
       if (user) {
         token.id = user.id
         token.onboardingDone = user.onboardingDone ?? false
+      }
+
+      // オンボーディング保存後にクライアントから要求された場合はDBの値で再同期する
+      if (trigger === "update" && token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { onboardingDone: true },
+        })
+
+        if (dbUser) {
+          token.onboardingDone = dbUser.onboardingDone
+        }
       }
 
       // Googleログイン時など（userが無い場合の補完）
