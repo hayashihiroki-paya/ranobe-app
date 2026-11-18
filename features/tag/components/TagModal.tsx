@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react"
 import TagPicker from "./TagPicker"
+import { useAccessibleDialog } from "@/lib/hooks/useAccessibleDialog"
 
 type Tag = {
   id: string
@@ -17,6 +18,7 @@ type Props = {
 }
 
 export default function TagModal({ isbn, isOpen, onClose }: Props) {
+  const dialogRef = useAccessibleDialog({ isOpen, onClose })
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
@@ -78,21 +80,30 @@ export default function TagModal({ isbn, isOpen, onClose }: Props) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-
-      <div className="bg-white p-6 rounded-xl w-[520px] max-h-[80vh] shadow-lg">
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-3 sm:p-6">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tag-modal-title"
+        aria-describedby="tag-modal-description"
+        tabIndex={-1}
+        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-xl bg-white p-4 shadow-lg sm:max-h-[calc(100dvh-3rem)] sm:p-6"
+      >
         {/* ヘッダー */}
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h2 className="text-lg font-bold">
+            <h2 id="tag-modal-title" className="text-lg font-bold">
               好きなポイントを選択
             </h2>
-            <p className="text-sm text-gray-500">
+            <p id="tag-modal-description" className="text-sm text-gray-500">
               おすすめ精度が向上します（任意）
             </p>
           </div>
           <button
+            type="button"
+            data-dialog-initial-focus
+            aria-label="タグ編集を閉じる"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
           >
@@ -112,6 +123,7 @@ export default function TagModal({ isbn, isOpen, onClose }: Props) {
         {/* フッター（完了ボタンだけ残す） */}
         <div className="flex justify-end pt-4 border-t mt-4">
           <button
+            type="button"
             onClick={onClose}
             className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600 active:scale-95 transition"
           >
