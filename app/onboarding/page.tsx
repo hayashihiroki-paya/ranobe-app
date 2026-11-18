@@ -52,7 +52,7 @@ export default function OnboardingPage() {
     }
 
     if ("skip" in payload) {
-      toast.success("設定をスキップしました。あとからプロフィールで設定できます")
+      toast.success("設定をスキップしました。あとから作品にタグを付けることもできます")
     } else {
       toast.success("設定完了！おすすめを表示します")
     }
