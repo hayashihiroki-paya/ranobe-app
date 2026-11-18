@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getServerSessionMock } = vi.hoisted(() => ({
+const { getServerSessionMock, findUniqueMock } = vi.hoisted(() => ({
   getServerSessionMock: vi.fn(),
+  findUniqueMock: vi.fn(),
 }));
 
 vi.mock("next-auth", () => ({
@@ -11,17 +12,34 @@ vi.mock("next-auth", () => ({
 vi.mock("@/app/api/auth/[...nextauth]/route", () => ({
   authOptions: {},
 }));
+vi.mock("@/lib/prisma", () => ({
+  prisma: { user: { findUnique: findUniqueMock } },
+}));
 
 import { getAuthenticatedUserId, unauthorizedResponse } from "./auth";
 
 describe("getAuthenticatedUserId", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    findUniqueMock.mockResolvedValue({ id: "reader-1" });
+  });
 
   it("returns the authenticated user ID from the session", async () => {
     getServerSessionMock.mockResolvedValue({ user: { id: "reader-1" } });
 
     await expect(getAuthenticatedUserId()).resolves.toBe("reader-1");
     expect(getServerSessionMock).toHaveBeenCalledWith({});
+    expect(findUniqueMock).toHaveBeenCalledWith({
+      where: { id: "reader-1" },
+      select: { id: true },
+    });
+  });
+
+  it("rejects a session whose user has been deleted", async () => {
+    getServerSessionMock.mockResolvedValue({ user: { id: "reader-1" } });
+    findUniqueMock.mockResolvedValue(null);
+
+    await expect(getAuthenticatedUserId()).resolves.toBeNull();
   });
 
   it.each([
@@ -33,6 +51,7 @@ describe("getAuthenticatedUserId", () => {
     getServerSessionMock.mockResolvedValue(session);
 
     await expect(getAuthenticatedUserId()).resolves.toBeNull();
+    expect(findUniqueMock).not.toHaveBeenCalled();
   });
 });
 

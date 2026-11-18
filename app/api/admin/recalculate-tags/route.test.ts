@@ -7,8 +7,13 @@ import {
   vi,
 } from "vitest";
 
-const { getServerSessionMock, recalculateBookTagsMock } = vi.hoisted(() => ({
+const {
+  getServerSessionMock,
+  getAuthenticatedUserIdMock,
+  recalculateBookTagsMock,
+} = vi.hoisted(() => ({
   getServerSessionMock: vi.fn(),
+  getAuthenticatedUserIdMock: vi.fn(),
   recalculateBookTagsMock: vi.fn(),
 }));
 
@@ -17,6 +22,9 @@ vi.mock("next-auth", () => ({
 }));
 vi.mock("@/app/api/auth/[...nextauth]/route", () => ({
   authOptions: {},
+}));
+vi.mock("@/lib/api/auth", () => ({
+  getAuthenticatedUserId: getAuthenticatedUserIdMock,
 }));
 vi.mock("@/lib/batch/recalculateBookTags", () => ({
   recalculateBookTags: recalculateBookTagsMock,
@@ -36,6 +44,7 @@ describe("POST /api/admin/recalculate-tags", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("ADMIN_EMAIL", "admin@example.com");
+    getAuthenticatedUserIdMock.mockResolvedValue("reader-1");
   });
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -44,6 +53,7 @@ describe("POST /api/admin/recalculate-tags", () => {
 
   it("requires a signed-in user", async () => {
     getServerSessionMock.mockResolvedValue(null);
+    getAuthenticatedUserIdMock.mockResolvedValue(null);
 
     const response = await POST(request());
 
