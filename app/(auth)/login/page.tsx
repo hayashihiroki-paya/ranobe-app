@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { signIn, getSession } from "next-auth/react"
@@ -21,6 +21,15 @@ export default function LoginPage() {
 
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const accountDeleted = new URLSearchParams(window.location.search).get(
+      "accountDeleted",
+    )
+    if (accountDeleted === "1") {
+      toast.success("アカウントを削除しました")
+    }
+  }, [])
 
   const onSubmit = async (data: LoginFormValues) => {
     setLoading(true)

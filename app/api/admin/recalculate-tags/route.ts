@@ -3,10 +3,19 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { getAuthenticatedUserId } from "@/lib/api/auth"
 import { recalculateBookTags } from "@/lib/batch/recalculateBookTags"
 
 export async function POST(req: Request) {
   try {
+    const userId = await getAuthenticatedUserId()
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     // セッション取得
     const session = await getServerSession(authOptions)
 
